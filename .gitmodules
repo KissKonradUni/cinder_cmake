@@ -1,0 +1,10 @@
+[submodule "extern/imgui"]
+	path = extern/imgui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking
+[submodule "extern/SDL"]
+	path = extern/SDL
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "extern/reflect-cpp"]
+	path = extern/reflect-cpp
+	url = https://github.com/getml/reflect-cpp

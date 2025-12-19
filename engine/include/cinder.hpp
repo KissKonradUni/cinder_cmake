@@ -1,5 +1,5 @@
 #pragma once
 
 namespace cinder {
-    void greet();
+    void debugVersionInfo();
 }  // namespace cinder

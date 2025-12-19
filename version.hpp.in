@@ -1,0 +1,25 @@
+#pragma once
+
+#include <string_view>
+
+namespace cinder {
+
+struct __CinderVersion {
+    std::string_view name;
+    std::string_view version;
+    int major;
+    int minor;
+    std::string_view description;
+    std::string_view build_type;
+};
+
+const constexpr __CinderVersion version {
+    "@PROJECT_NAME@",
+    "@PROJECT_VERSION@",
+    @PROJECT_VERSION_MAJOR@,
+    @PROJECT_VERSION_MINOR@,
+    "@PROJECT_DESCRIPTION@",
+    "@CMAKE_BUILD_TYPE@"
+};
+
+} // namespace cinder
