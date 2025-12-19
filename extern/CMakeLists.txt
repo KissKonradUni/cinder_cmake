@@ -11,7 +11,6 @@ add_library(imgui STATIC ${APP_SOURCES})
 target_include_directories(imgui PUBLIC ./imgui)
 target_include_directories(imgui PUBLIC ./imgui/backends)
 target_include_directories(imgui PUBLIC include ${CMAKE_BINARY_DIR}/include)
-target_link_libraries(imgui PUBLIC SDL3::SDL3)
 
 # Configure SDL3 to build as shared library only
 set(SDL_SHARED ON CACHE BOOL "" FORCE)

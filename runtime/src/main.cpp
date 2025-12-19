@@ -1,9 +1,8 @@
-#include <print>
-
 #include "cinder.hpp"
 
-int main() {
-    cinder::debugVersionInfo();
-    std::println("Hello from Runtime!");
+int main(int argc, char* argv[]) {
+    cinder::Application app;
+    app.printDebugInfo();
+    app.run(argc, argv);
     return 0;
 }

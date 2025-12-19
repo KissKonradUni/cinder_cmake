@@ -35,6 +35,7 @@ endif()
 
 # Generate version.hpp from template
 configure_file(version.hpp.in ${CMAKE_BINARY_DIR}/include/version.hpp @ONLY)
+configure_file(imgui_shaders.hpp.in ${CMAKE_BINARY_DIR}/include/imgui_shaders.hpp @ONLY)
 
 # Add subdirectories
 add_subdirectory(engine)
