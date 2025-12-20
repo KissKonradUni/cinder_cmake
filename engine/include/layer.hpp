@@ -28,6 +28,13 @@ protected:
     virtual PhaseState onDetach() { return PhaseState::Success; }
     virtual EventState onEvent(SDL_Event*) { return EventState::Propagate; }
     
+    /**
+     * @brief Separate update phase before frame rendering
+     * @note onUpdate must be deterministic, side-effect free outside Host-owned state, 
+     *       and must not touch GPU, SDL windowing, or ImGui.
+     * 
+     * @return PhaseState - Determines whether to continue or abort the main loop
+     */
     virtual PhaseState onUpdate(float) { return PhaseState::Continue; }
     virtual PhaseState onPrepareFrame() { return PhaseState::Continue; }
     virtual PhaseState onRenderFrame() { return PhaseState::Continue; }
