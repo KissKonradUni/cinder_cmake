@@ -17,7 +17,7 @@ PhaseState WindowLayer::onAttach() {
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::println("Couldn't initialize SDL: %s", SDL_GetError());
-        return PhaseState::Faliure;
+        return PhaseState::Failure;
     }
 
     // Window and Renderer Creation
@@ -25,7 +25,7 @@ PhaseState WindowLayer::onAttach() {
     this->m_window = SDL_CreateWindow(version.name.data(), 1280, 720, window_flags);
     if (this->m_window == NULL) {
         std::println("Couldn't create window/renderer: %s", SDL_GetError());
-        return PhaseState::Faliure;
+        return PhaseState::Failure;
     }
     SDL_SetWindowPosition(this->m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(this->m_window);
@@ -34,7 +34,7 @@ PhaseState WindowLayer::onAttach() {
 }
 
 EventState WindowLayer::onEvent(SDL_Event* event) {    
-    return EventState::Continue;
+    return EventState::Propagate;
 }
 
 PhaseState WindowLayer::onDetach() {

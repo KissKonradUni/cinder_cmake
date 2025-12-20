@@ -9,13 +9,13 @@ PhaseState GPUDeviceLayer::onAttach() {
     m_device = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, version.build_type == "Debug", nullptr);
     if (m_device == NULL) {
         std::println("Couldn't create GPU device: %s", SDL_GetError());
-        return PhaseState::Faliure;
+        return PhaseState::Failure;
     }
 
     if (!SDL_ClaimWindowForGPUDevice(m_device, m_window->getInternal()))
     {
         std::println("ClaimWindow failed");
-        return PhaseState::Faliure;
+        return PhaseState::Failure;
     }
     SDL_SetGPUSwapchainParameters(m_device, m_window->getInternal(), SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_VSYNC);
 

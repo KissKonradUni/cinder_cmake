@@ -25,11 +25,11 @@ public:
     static void SDLCALL onDetach(void* appstate, SDL_AppResult result);
 
     template<typename T, typename... Args>
-    std::enable_if_t<std::is_base_of_v<Layer, T>, T*> pushLayer(Args&&... args) {
+    std::enable_if_t<std::is_base_of_v<Layer, T>, T&> pushLayer(Args&&... args) {
         auto layer = std::make_unique<T>(std::forward<Args>(args)...);
         layer->m_Host = this;
         m_layers.emplace_back(std::move(layer));
-        return static_cast<T*>(m_layers.back().get());
+        return static_cast<T&>(*m_layers.back());
     }
     void popLayer(Layer* layer);
 protected:

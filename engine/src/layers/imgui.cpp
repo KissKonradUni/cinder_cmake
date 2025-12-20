@@ -53,7 +53,7 @@ PhaseState ImGuiLayer::onPrepareFrame() {
     ImGui::BeginMainMenuBar();
     if (ImGui::BeginMenu("File")) {
         if (ImGui::MenuItem("Exit")) {
-            return PhaseState::Faliure;
+            return PhaseState::Failure;
         }
         ImGui::EndMenu();
     }
@@ -89,7 +89,7 @@ PhaseState ImGuiLayer::onRenderFrame() {
     if (cmdbuf == NULL)
     {
         std::println("AcquireGPUCommandBuffer failed: %s", SDL_GetError());
-        return PhaseState::Faliure;
+        return PhaseState::Failure;
     }
 
     // Aquire ImGui Draw Data
@@ -100,7 +100,7 @@ PhaseState ImGuiLayer::onRenderFrame() {
     SDL_GPUTexture* swapchainTexture;
     if (!SDL_WaitAndAcquireGPUSwapchainTexture(cmdbuf, m_window->getInternal(), &swapchainTexture, NULL, NULL)) {
         std::println("WaitAndAcquireGPUSwapchainTexture failed: %s", SDL_GetError());
-        return PhaseState::Faliure;
+        return PhaseState::Failure;
     }
 
     // TODO: Remove clear so it gets drawn above other content
@@ -132,7 +132,7 @@ PhaseState ImGuiLayer::onRenderFrame() {
 
 EventState ImGuiLayer::onEvent(SDL_Event* event) {
     ImGui_ImplSDL3_ProcessEvent(event);
-    return EventState::Continue;
+    return EventState::Propagate;
 }
 
 PhaseState ImGuiLayer::onDetach() {    

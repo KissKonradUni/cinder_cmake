@@ -10,8 +10,8 @@ int main(int argc, char* argv[]) {
 
     Host host;
     auto windowLayer = host.pushLayer<WindowLayer>();
-    auto gpuDeviceLayer = host.pushLayer<GPUDeviceLayer>(windowLayer);
-    auto imguiLayer = host.pushLayer<ImGuiLayer>(windowLayer, gpuDeviceLayer);
+    auto gpuDeviceLayer = host.pushLayer<GPUDeviceLayer>(&windowLayer);
+    auto imguiLayer = host.pushLayer<ImGuiLayer>(&windowLayer, &gpuDeviceLayer);
 
     auto result = host.run(argc, argv);
     return result;

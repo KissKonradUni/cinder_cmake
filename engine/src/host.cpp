@@ -31,21 +31,21 @@ SDL_AppResult SDLCALL Host::onUpdate(void* appstate) {
     for (auto& layer : host->m_layers) {
         // TODO: delta time
         auto result = layer->onUpdate(0.166f); 
-        if (result == PhaseState::Faliure) {
+        if (result == PhaseState::Failure) {
             return SDL_APP_FAILURE;
         }
     }
 
     for (auto& layer : host->m_layers) {
         auto result = layer->onPrepareFrame();
-        if (result == PhaseState::Faliure) {
+        if (result == PhaseState::Failure) {
             return SDL_APP_FAILURE;
         }
     }
 
     for (auto& layer : host->m_layers) {
         auto result = layer->onRenderFrame();
-        if (result == PhaseState::Faliure) {
+        if (result == PhaseState::Failure) {
             return SDL_APP_FAILURE;
         }
     }

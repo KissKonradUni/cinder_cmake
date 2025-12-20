@@ -8,13 +8,13 @@ namespace cinder {
 class Host; // SDL wrapper
 
 enum class PhaseState: uint8_t {
-    Faliure = SDL_APP_FAILURE,
+    Failure = SDL_APP_FAILURE,
     Continue = SDL_APP_CONTINUE,
     Success = SDL_APP_SUCCESS,
 };
 
 enum class EventState: uint8_t {
-    Continue = SDL_APP_CONTINUE,
+    Propagate = SDL_APP_CONTINUE,
     Consume = SDL_APP_SUCCESS,
 };
 
@@ -26,7 +26,7 @@ public:
 protected:
     virtual PhaseState onAttach() { return PhaseState::Success; }
     virtual PhaseState onDetach() { return PhaseState::Success; }
-    virtual EventState onEvent(SDL_Event*) { return EventState::Continue; }
+    virtual EventState onEvent(SDL_Event*) { return EventState::Propagate; }
     
     virtual PhaseState onUpdate(float) { return PhaseState::Continue; }
     virtual PhaseState onPrepareFrame() { return PhaseState::Continue; }
