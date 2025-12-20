@@ -9,4 +9,7 @@ add_executable(cinder_runtime ${APP_SOURCES})
 target_include_directories(cinder_runtime PUBLIC include)
 target_include_directories(cinder_runtime PUBLIC include ${CMAKE_BINARY_DIR}/include)
 
+# Add wamr includes
+include_directories(${WAMR_ROOT_DIR}/core/iwasm/include)
+
 target_link_libraries(cinder_runtime PUBLIC cinder_engine)

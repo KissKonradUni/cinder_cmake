@@ -43,5 +43,8 @@ add_subdirectory(runtime)
 # add_subdirectory(editor)
 # add_subdirectory(tests)
 
+# Add example wasm module
+add_subdirectory(wasm-example-module)
+
 # Add external libraries
 add_subdirectory(extern)

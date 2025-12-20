@@ -8,3 +8,6 @@
 [submodule "extern/reflect-cpp"]
 	path = extern/reflect-cpp
 	url = https://github.com/getml/reflect-cpp
+[submodule "extern/wasm-micro-runtime"]
+	path = extern/wasm-micro-runtime
+	url = https://github.com/bytecodealliance/wasm-micro-runtime.git

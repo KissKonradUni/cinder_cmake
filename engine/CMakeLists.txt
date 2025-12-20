@@ -9,5 +9,7 @@ add_library(cinder_engine STATIC ${APP_SOURCES})
 target_include_directories(cinder_engine PUBLIC include)
 target_include_directories(cinder_engine PUBLIC include ${CMAKE_BINARY_DIR}/include)
 
+include_directories(${WAMR_ROOT_DIR}/core/iwasm/include)
+
 # Add external libraries
-target_link_libraries(cinder_engine PUBLIC imgui SDL3::SDL3 reflectcpp)
+target_link_libraries(cinder_engine PUBLIC imgui SDL3::SDL3 reflectcpp vmlib)
