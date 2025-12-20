@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     auto currentPath = std::filesystem::current_path();
     std::println("Running directory: {}", currentPath.string());
  
-    auto wasmLayer = host.pushLayer<WasmLayer>(currentPath / "../wasm_modules/wasm_example_module.wasm");
+    auto wasmLayer = host.pushLayer<WasmLayer>(currentPath / "build/wasm_modules/wasm_example_module.wasm");
 
     auto result = host.run(argc, argv);
     return result;

@@ -78,12 +78,13 @@ PhaseState ImGuiLayer::onPrepareFrame() {
         ImGui::End();
     }
     ImGui::EndMainMenuBar();
-    ImGui::Render(); // Bad naming, prepares draw data
 
     return PhaseState::Continue;
 }
 
 PhaseState ImGuiLayer::onRenderFrame() {
+    ImGui::Render(); // Bad naming, prepares draw data
+
     // Aquire Command Buffer
     SDL_GPUCommandBuffer* cmdbuf = SDL_AcquireGPUCommandBuffer(m_gpuDevice->getInternal());
     if (cmdbuf == NULL)

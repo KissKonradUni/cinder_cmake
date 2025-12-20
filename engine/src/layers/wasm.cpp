@@ -1,5 +1,7 @@
 #include "layers/wasm.hpp"
 
+#include "imgui.h"
+
 #define INNER_FACING
 #include "wasm/wasm_exports.h"
 
@@ -92,14 +94,44 @@ PhaseState WasmLayer::onUpdate(float deltaTime) {
             std::println("WASM fib({}) = {}", n, result);
         }
 
-        if (auto func = tryGetFunction("trigger_error")) {
-            call(*func);
-        }
+        // TODO: some way to restart the module safely
+        // Omitting test as it will crash the runtime
+        //if (auto func = tryGetFunction("trigger_error")) {
+        //    call(*func);
+        //}
 
         if (auto func = tryGetFunction("non_existent_function")) {
             call(*func);
         }
     }
+
+    return PhaseState::Continue;
+}
+
+PhaseState WasmLayer::onPrepareFrame() {
+    ImGui::Begin("WASM Module Info");
+    ImGui::Text("WASM Module: %s", m_bytecodePath.filename().string().c_str());
+    ImGui::Text("Stack Size: %u bytes", m_stackSize);
+    ImGui::Text("Heap Size: %u bytes", m_heapSize);
+
+    ImGui::Separator();
+    ImGui::Text("Available Functions:");
+    for (const auto& [name, func] : m_functionCache) {
+        ImGui::BulletText("%s", name.c_str());
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Error Buffer:");
+    ImGui::TextWrapped("%s", m_errorBuffer.data());
+
+    ImGui::Separator();
+    if (ImGui::Button("Call example()")) {
+        if (auto func = tryGetFunction("example")) {
+            call(*func);
+        }
+    }
+
+    ImGui::End();
 
     return PhaseState::Continue;
 }

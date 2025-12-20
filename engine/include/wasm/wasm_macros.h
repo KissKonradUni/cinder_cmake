@@ -16,7 +16,7 @@ typedef uint32_t wasm_size_t;
     ret name(wasm_exec_env_t env, __VA_ARGS__);
 #else 
 #define FUNCTION_IMPORT(ret, name, ...) \
-    __attribute__((import_module(MODULE), import_name(#name))) ret name(__VA_ARGS__);
+    ret __attribute__((import_module(MODULE), import_name(#name))) name(__VA_ARGS__);
 
 #define WASM_EXPORT(name) \
     __attribute__((export_name(#name))) name

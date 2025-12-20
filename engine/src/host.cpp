@@ -8,12 +8,11 @@
 
 namespace cinder {
 
-// Hacky way to get appstate into SDL callbacks
-static Host* __internal_appstate = nullptr;
+Host* Host::__internal_appstate = nullptr;
 
 SDL_AppResult SDLCALL Host::onAttach(void** appstate, int argc, char* argv[]) {
-    *appstate = __internal_appstate;
-    __internal_appstate = nullptr;
+    *appstate = Host::__internal_appstate;
+    Host::__internal_appstate = nullptr;
 
     Host* host = (Host*)*appstate;
 
@@ -22,11 +21,13 @@ SDL_AppResult SDLCALL Host::onAttach(void** appstate, int argc, char* argv[]) {
         layer->onAttach();
     }
 
+    host->m_currentPhase = HostPhase::Other;
 	return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDLCALL Host::onUpdate(void* appstate) { 
-    const Host* host = (Host*)appstate;
+    Host* host = (Host*)appstate;
+    host->m_currentPhase = HostPhase::Update;
 
     for (auto& layer : host->m_layers) {
         // TODO: delta time
@@ -36,6 +37,7 @@ SDL_AppResult SDLCALL Host::onUpdate(void* appstate) {
         }
     }
 
+    host->m_currentPhase = HostPhase::PrepareFrame;
     for (auto& layer : host->m_layers) {
         auto result = layer->onPrepareFrame();
         if (result == PhaseState::Failure) {
@@ -43,6 +45,7 @@ SDL_AppResult SDLCALL Host::onUpdate(void* appstate) {
         }
     }
 
+    host->m_currentPhase = HostPhase::RenderFrame;
     for (auto& layer : host->m_layers) {
         auto result = layer->onRenderFrame();
         if (result == PhaseState::Failure) {
@@ -50,11 +53,13 @@ SDL_AppResult SDLCALL Host::onUpdate(void* appstate) {
         }
     }
 
+    host->m_currentPhase = HostPhase::Other;
     return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDLCALL Host::onEvent(void* appstate, SDL_Event* event) {
-    const Host* host = (Host*)appstate;
+    Host* host = (Host*)appstate;
+    host->m_currentPhase = HostPhase::Other;
 
 	if (event->type == SDL_EVENT_QUIT) {
         return SDL_APP_SUCCESS; 
@@ -67,11 +72,13 @@ SDL_AppResult SDLCALL Host::onEvent(void* appstate, SDL_Event* event) {
         }
     }
     
+    host->m_currentPhase = HostPhase::Other;
     return SDL_APP_CONTINUE;
 }
 
 void SDLCALL Host::onDetach(void* appstate, SDL_AppResult result) {
-    const Host* host = (Host*)appstate;
+    Host* host = (Host*)appstate;
+    host->m_currentPhase = HostPhase::Detach;
 
     // Reverse order
     for (auto it = host->m_layers.rbegin(); it != host->m_layers.rend(); ++it) {
@@ -79,10 +86,10 @@ void SDLCALL Host::onDetach(void* appstate, SDL_AppResult result) {
     }
 }
 
-int SDLCALL __sdl_entrypoint(int argc, char* argv[]) {
+int SDLCALL Host::__sdl_entrypoint(int argc, char* argv[]) {
 	return SDL_EnterAppMainCallbacks(argc, argv, 
-                                     Host::onAttach , Host::onUpdate,
-	                                 Host::onEvent, Host::onDetach);
+                                     Host::onAttach, Host::onUpdate,
+	                                 Host::onEvent,  Host::onDetach);
 }
 
 void Host::printDebugInfo() {
@@ -92,8 +99,8 @@ void Host::printDebugInfo() {
 }
 
 int Host::run(int argc, char* argv[]) {
-    __internal_appstate = this;
-	return SDL_RunApp(argc, argv, __sdl_entrypoint, NULL);
+    Host::__internal_appstate = this;
+	return SDL_RunApp(argc, argv, Host::__sdl_entrypoint, NULL);
 }
 
 void Host::popLayer(Layer* layer) {
