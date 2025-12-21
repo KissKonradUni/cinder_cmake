@@ -9,7 +9,8 @@ struct DynBitset {
     explicit DynBitset(const std::vector<DynBitset>& flags);
 
     void set(uint32_t bit);
-    void clear(uint32_t bit);
+    void remove(uint32_t bit);
+    void clear();
     bool test(uint32_t bit) const;
 
     bool contains(const DynBitset& other) const;

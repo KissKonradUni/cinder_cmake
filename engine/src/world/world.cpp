@@ -1,165 +1,128 @@
 #include "world/world.hpp"
 
 #include <print>
-#include <memory>
 
 namespace hex {
 
-World::World(ComponentRegistry* componentRegistry): m_entities(), m_archetypes(), m_freeIndices(), m_componentRegistry(componentRegistry) {
-    m_entities.reserve(ALLOCATION_CHUNK_SIZE);
+World::World(ComponentRegistry& componentRegistry)
+	: m_entities(), m_freeIndices(), m_componentPools(),
+	  m_componentRegistry(componentRegistry) {
+	m_entities.reserve(ALLOCATION_CHUNK_SIZE);
 }
 
-World::~World() {
-}
+World::~World() {}
 
 Entity World::createEntity() {
-    uint32_t index;
+	uint32_t index;
 
-    if (!m_freeIndices.empty()) {
-        index = m_freeIndices.back();
-        m_freeIndices.pop_back();
-    } else {
-        index = static_cast<uint32_t>(m_entities.size());
-        m_entities.push_back({});
-    }
+	if (!m_freeIndices.empty()) {
+		index = m_freeIndices.back();
+		m_freeIndices.pop_back();
+	} else {
+		index = static_cast<uint32_t>(m_entities.size());
+		m_entities.emplace_back();
+	}
 
-    EntityRecord& record = m_entities[index];
+	EntityRecord& record = m_entities[index];
+	Entity entity{.id = index, .generation = record.generation};
 
-    Entity entity {
-        .id = index,
-        .generation = record.generation
-    };
-
-    record.archetype = nullptr; // No components yet
-    record.row = 0;             // TODO: determine row in archetype storage
-
-    return entity;
-};
+	return entity;
+}
 
 void World::destroyEntity(const Entity entity) {
-    if (!isEntityValid(entity)) {
-        return;
+	if (!isEntityValid(entity)) {
+		return;
+	}
+
+    // Remove all components associated with this entity
+    for (auto& compRecord : m_entities[entity.id].components) {
+        ComponentPool& pool = *m_componentPools[compRecord.type];
+        pool.remove(compRecord.row);
     }
 
-    EntityRecord& record = this->m_entities[entity.id];
-    auto affectedRow = record.archetype->removeRow(record.row);
-    this->updateRecord(affectedRow.affectedEntity, affectedRow.affectedRow);
+	EntityRecord& record = m_entities[entity.id];
+	record.componentBits.clear();
+	record.components.clear();
+	record.generation += 1;
 
-    record.archetype = nullptr;
-    record.row = -1;            // N/A
-    record.generation++;        // Invalidate existing entity references
-
-    this->m_freeIndices.push_back(entity.id);
+    m_freeIndices.push_back(entity.id);
 };
 
 bool World::isEntityValid(const Entity entity) const {
-    if (entity.id >= this->m_entities.size()) {
-        std::println("Entity ID {} is out of bounds (max {})", entity.id, this->m_entities.size());
-        return false;
-    }
+	if (entity.id >= this->m_entities.size()) {
+		std::println("Entity ID {} is out of bounds (max {})", entity.id,
+		             this->m_entities.size());
+		return false;
+	}
 
-    const EntityRecord& record = this->m_entities[entity.id];
-    return record.generation == entity.generation;
+	const EntityRecord& record = this->m_entities[entity.id];
+	return record.generation == entity.generation;
 };
 
-Archetype* World::findOrCreateArchetype(const DynBitset& componentMask) {
-    for (const auto& archetype : m_archetypes) {
-        if (archetype->mask == componentMask) {
-            return archetype.get();
-        }
-    }
-
-    std::vector<std::size_t> componentSizes;
-    for (uint32_t i = 0; i < componentMask.bitLength(); ++i) {
-        if (componentMask.test(i)) {
-            const std::size_t compSize = m_componentRegistry->getSize(i);
-            componentSizes.push_back(compSize);
-        }
-    }
-
-    auto newArchetype = std::make_unique<Archetype>(componentMask, componentSizes);
-    Archetype* ptr = newArchetype.get();
-    m_archetypes.push_back(std::move(newArchetype));
-    return ptr;
-}
-
-// It's the user's responsibility to initialize new components
 void World::addComponents(Entity entity, const std::vector<ComponentTypeID>& componentTypes) {
     if (!isEntityValid(entity)) {
-        std::println("Cannot add components to invalid entity ID {}", entity.id);
+        std::println("World: Cannot add components to invalid entity ID {}", entity.id);
         return;
     }
 
-    // Get current record
-    EntityRecord& record = this->m_entities[entity.id];
-    DynBitset newMask = record.archetype ? record.archetype->mask : DynBitset();
-    Archetype* oldArchetype = record.archetype;
-
-    // Update mask
+    EntityRecord& record = m_entities[entity.id];
     for (const auto& typeID : componentTypes) {
-        newMask.set(typeID);
-    }
-
-    // Find or create new archetype
-    Archetype* newArchetype = findOrCreateArchetype(newMask);
-
-    // Migrate entity to new archetype
-    auto componentData = record.archetype ?
-        record.archetype->collectRawComponentData(record.row) :
-        std::make_unique<std::vector<std::span<uint8_t>>>();
-
-    // Reorder component data and append new component to match new archetype layout
-    std::vector<std::span<uint8_t>> reorderedData;
-    if (oldArchetype == nullptr) {
-        for (auto& compType : componentTypes) {
-            size_t compSize = m_componentRegistry->getSize(compType);
-            std::vector<uint8_t> emptyData(compSize, 0); // zero-initialize new component
-            reorderedData.push_back(std::span<uint8_t>(emptyData.data(), compSize));
+        auto componentSize = m_componentRegistry.getSize(typeID);
+        if (!componentSize.has_value()) {
+            std::println("World: Cannot add component of unknown type ID {} to entity ID {}", typeID, entity.id);
+            continue;
         }
-    } else {
-        for (uint32_t i = 0; i < newArchetype->mask.bitLength(); ++i) {
-            if (newArchetype->mask.test(i)) {
-                // Check if old archetype had this component
-                if (oldArchetype->mask.test(i)) {
-                    // Find index in old archetype
-                    auto it = oldArchetype->m_typeToColumn.find(i);
-                    if (it != oldArchetype->m_typeToColumn.end()) {
-                        size_t columnIndex = it->second;
-                        reorderedData.push_back((*componentData)[columnIndex]);
-                    } else {
-                        std::println("Inconsistent state: component {} in new archetype but not found in old archetype mapping", i);
-                    }
-                } else {
-                    // New component, zero-initialize
-                    size_t compSize = m_componentRegistry->getSize(i);
-                    std::vector<uint8_t> emptyData(compSize, 0);
-                    reorderedData.push_back(std::span<uint8_t>(emptyData.data(), compSize));
-                }
-            }
+
+        // Ensure component pool exists
+        if (typeID >= m_componentPools.size()) {
+            m_componentPools.resize(typeID + 1);
+            m_componentPools[typeID] = std::make_unique<ComponentPool>(componentSize.value());
         }
-    }
-    
-    auto flattenedData = std::vector<uint8_t>();
-    for (const auto& span : reorderedData) {
-        flattenedData.insert(flattenedData.end(), span.begin(), span.end());
-    }
 
-    auto newID = newArchetype->pushEntityWithComponents(entity, flattenedData);
+        // I have to copy it, I don't know the type at compile time so I can't construct it directly in-place
+        ComponentPool& pool = *m_componentPools[typeID];
+        UnknownComponent newComponent(componentSize.value());
+        std::span<uint8_t> dataSpan = newComponent.getData();
+        uint32_t row = pool.add(dataSpan);
 
-    // Remove from old archetype
-    if (record.archetype) {
-        auto affectedRow = record.archetype->removeRow(record.row);
-        this->updateRecord(affectedRow.affectedEntity, affectedRow.affectedRow);
+        record.componentBits.set(typeID);
+        record.components.push_back(ComponentRecord{.type = typeID, .row = row});
     }
-
-    // Update record
-    record.archetype = newArchetype;
-    record.row = newID;
 }
 
-void World::updateRecord(Entity entity, uint32_t row) {
-    EntityRecord& record = this->m_entities[entity.id];
-    record.row = row;
+void World::removeComponents(Entity entity, const std::vector<ComponentTypeID>& componentTypes) {
+    if (!isEntityValid(entity)) {
+        std::println("World: Cannot remove components from invalid entity ID {}", entity.id);
+        return;
+    }
+
+    EntityRecord& record = m_entities[entity.id];
+    for (const auto& typeID : componentTypes) {
+        if (!record.componentBits.test(typeID)) {
+            std::println("World: Entity ID {} does not have component type ID {}, cannot remove", entity.id, typeID);
+            continue;
+        }
+
+        // Find component record
+        auto it = std::find_if(record.components.begin(), record.components.end(),
+                               [typeID](const ComponentRecord& rec) { return rec.type == typeID; });
+        if (it == record.components.end()) {
+            std::println("World: Trying to remove component type ID {} from entity ID {}, but no record found", typeID, entity.id);
+            continue;
+        }
+
+        // Remove from pool
+        if (typeID < m_componentPools.size() && m_componentPools[typeID]) {
+            ComponentPool& pool = *m_componentPools[typeID];
+            pool.remove(it->row);
+        } else {
+            std::println("World: No component pool for type ID {}, cannot remove from entity ID {}", typeID, entity.id);
+        }
+
+        // Remove from entity record
+        record.componentBits.remove(typeID);
+        record.components.erase(it);
+    }
 }
 
 } // namespace hex

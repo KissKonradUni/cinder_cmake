@@ -2,6 +2,9 @@
 
 #include <cstdint>
 
+#include "world/bitset.hpp"
+#include "world/component.hpp"
+
 namespace hex {
 
 struct Entity {
@@ -9,12 +12,15 @@ struct Entity {
     uint32_t generation;
 };
 
-class Archetype;
+struct ComponentRecord {
+    ComponentTypeID type;
+    uint32_t row;
+};
 
 struct EntityRecord {
-    Archetype* archetype;
-    uint32_t row; // index inside archetype storage
+    DynBitset componentBits;
     uint32_t generation;
+    std::vector<ComponentRecord> components;
 };
 
 } // namespace hex

@@ -39,13 +39,19 @@ void DynBitset::set(uint32_t bit) {
     data[index] |= (uint64_t(1) << offset);
 }
 
-void DynBitset::clear(uint32_t bit) {
+void DynBitset::remove(uint32_t bit) {
     const uint32_t index = bit / 64;
     const uint32_t offset = bit % 64;
     if (index >= data.size()) {
         return;
     }
     data[index] &= ~(uint64_t(1) << offset);
+}
+
+void DynBitset::clear() {
+    for (auto& block : data) {
+        block = 0;
+    }
 }
 
 bool DynBitset::test(uint32_t bit) const {

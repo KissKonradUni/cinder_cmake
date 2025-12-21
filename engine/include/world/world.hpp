@@ -1,6 +1,5 @@
 #pragma once
 
-#include "world/archetype.hpp"
 #include "world/entity.hpp"
 
 #include <memory>
@@ -8,27 +7,59 @@
 
 namespace hex {
 
-#define ALLOCATION_CHUNK_SIZE 1024
+#define ALLOCATION_CHUNK_SIZE 64
 
 class World {
 public:
-    World(ComponentRegistry* componentRegistry);
+    World(ComponentRegistry& componentRegistry);
     ~World();
+
+    World(const World&) = delete;
+    World& operator=(const World&) = delete;
 
     Entity createEntity();
     void destroyEntity(const Entity entity);
     bool isEntityValid(const Entity entity) const;
 
-    Archetype* findOrCreateArchetype(const DynBitset& componentMask);
+    template<typename compType>
+    std::optional<compType*> getComponent(Entity entity, ComponentTypeID typeID) {
+        if (!isEntityValid(entity)) {
+            std::println("World: Cannot get component of invalid entity ID {}", entity.id);
+            return std::nullopt;
+        }
+
+        const EntityRecord& record = m_entities[entity.id];
+        if (!record.componentBits.test(typeID)) {
+            std::println("World: Entity ID {} does not have component type ID {}, cannot get", entity.id, typeID);
+            return std::nullopt;
+        }
+
+        // Find component record
+        auto it = std::find_if(record.components.begin(), record.components.end(),
+                               [typeID](const ComponentRecord& rec) { return rec.type == typeID; });
+        if (it == record.components.end()) {
+            std::println("World: Trying to get component type ID {} from entity ID {}, but no record found", typeID, entity.id);
+            return std::nullopt;
+        }
+
+        // Get from pool
+        if (typeID < m_componentPools.size() && m_componentPools[typeID]) {
+            ComponentPool& pool = *m_componentPools[typeID];
+            return pool.get<compType>(it->row);
+        } else {
+            std::println("World: No component pool for type ID {}, cannot get from entity ID {}", typeID, entity.id);
+            return std::nullopt;
+        }
+    }
+
     void addComponents(Entity entity, const std::vector<ComponentTypeID>& componentTypes);
+    void removeComponents(Entity entity, const std::vector<ComponentTypeID>& componentTypes);
 protected:
-    void updateRecord(Entity entity, uint32_t row);
+    std::vector<EntityRecord>                   m_entities;        // Indexed by Entity.id
+    std::vector<uint32_t>                       m_freeIndices;     // Reusable entity indices
+    std::vector<std::unique_ptr<ComponentPool>> m_componentPools;  // Indexed by ComponentTypeID
 
-    std::vector<std::unique_ptr<Archetype>> m_archetypes;
-    std::vector<EntityRecord> m_entities;
-    std::vector<uint32_t> m_freeIndices;
-
-    ComponentRegistry* m_componentRegistry;
+    ComponentRegistry& m_componentRegistry;
 };
 
 } // namespace hex
