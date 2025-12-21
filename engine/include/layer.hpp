@@ -35,11 +35,11 @@ protected:
      * 
      * @return PhaseState - Determines whether to continue or abort the main loop
      */
-    virtual PhaseState onUpdate(float) { return PhaseState::Continue; }
+    virtual PhaseState onUpdate() { return PhaseState::Continue; }
     virtual PhaseState onPrepareFrame() { return PhaseState::Continue; }
     virtual PhaseState onRenderFrame() { return PhaseState::Continue; }
 
-    Host* m_Host = nullptr;
+    Host* m_host = nullptr;
 };
 
 } // namespace cinder

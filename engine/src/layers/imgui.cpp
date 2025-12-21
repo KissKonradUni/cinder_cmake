@@ -18,19 +18,23 @@ PhaseState ImGuiLayer::onAttach() {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; 
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;    
 
+    // Load Fonts
+    if (!m_fontPath.empty()) {
+        if (exists(m_fontPath)) {
+            ImFont* font = io.Fonts->AddFontFromFileTTF(m_fontPath.string().c_str(), 16.0f);
+            io.FontDefault = font;
+        } else {
+            std::println("ImGui font path does not exist: {}", m_fontPath.string());
+        }
+    }
+
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
 
     // High-DPI scaling
     ImGuiStyle& style = ImGui::GetStyle();
     float main_scale = SDL_GetDisplayContentScale(SDL_GetDisplayForWindow(m_window->getInternal()));
-    //style.ScaleAllSizes(main_scale);       
-    //style.FontScaleDpi = main_scale;
-    
-    int display_w, display_h;
-    SDL_GetWindowSizeInPixels(m_window->getInternal(), &display_w, &display_h);
-    io.DisplaySize = ImVec2((float)display_w * main_scale, (float)display_h * main_scale);
-    io.DisplayFramebufferScale = ImVec2(1.0f / main_scale, 1.0f / main_scale);
+    style.FontScaleDpi = main_scale;
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL3_InitForSDLGPU(m_window->getInternal());
@@ -133,6 +137,13 @@ PhaseState ImGuiLayer::onRenderFrame() {
 
 EventState ImGuiLayer::onEvent(SDL_Event* event) {
     ImGui_ImplSDL3_ProcessEvent(event);
+
+    if (event->type == SDL_EVENT_WINDOW_MOVED) {
+        ImGuiStyle& style = ImGui::GetStyle();
+        float main_scale = SDL_GetDisplayContentScale(SDL_GetDisplayForWindow(m_window->getInternal()));
+        style.FontScaleDpi = main_scale;
+    }
+
     return EventState::Propagate;
 }
 

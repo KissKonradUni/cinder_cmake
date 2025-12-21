@@ -17,7 +17,7 @@ SDL_AppResult SDLCALL Host::onAttach(void** appstate, int argc, char* argv[]) {
     Host* host = (Host*)*appstate;
 
     for (auto& layer : host->m_layers) {
-        layer->m_Host = host;
+        layer->m_host = host;
         layer->onAttach();
     }
 
@@ -25,17 +25,31 @@ SDL_AppResult SDLCALL Host::onAttach(void** appstate, int argc, char* argv[]) {
 	return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult SDLCALL Host::onUpdate(void* appstate) { 
+SDL_AppResult SDLCALL Host::onUpdate(void* appstate) {
     Host* host = (Host*)appstate;
     host->m_currentPhase = HostPhase::Update;
 
+    host->m_time.totalTime = SDL_GetTicks() / 1000.0;
+    host->m_time.updateDelta = static_cast<float>(host->m_time.totalTime - host->m_time.lastUpdateTime);
+    host->m_time.lastUpdateTime = host->m_time.totalTime;
+
     for (auto& layer : host->m_layers) {
         // TODO: delta time
-        auto result = layer->onUpdate(0.166f); 
+        auto result = layer->onUpdate(); 
         if (result == PhaseState::Failure) {
             return SDL_APP_FAILURE;
         }
     }
+
+    host->m_currentPhase = HostPhase::Other;
+    return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDLCALL Host::onRender(void* appstate) { 
+    Host* host = (Host*)appstate;
+
+    // TODO: Move to other thread
+    onUpdate(appstate);
 
     host->m_currentPhase = HostPhase::PrepareFrame;
     for (auto& layer : host->m_layers) {
@@ -44,6 +58,10 @@ SDL_AppResult SDLCALL Host::onUpdate(void* appstate) {
             return SDL_APP_FAILURE;
         }
     }
+
+    host->m_time.totalTime = SDL_GetTicks() / 1000.0;
+    host->m_time.renderDelta = static_cast<float>(host->m_time.totalTime - host->m_time.lastRenderTime);
+    host->m_time.lastRenderTime = host->m_time.totalTime;
 
     host->m_currentPhase = HostPhase::RenderFrame;
     for (auto& layer : host->m_layers) {
@@ -88,7 +106,7 @@ void SDLCALL Host::onDetach(void* appstate, SDL_AppResult result) {
 
 int SDLCALL Host::__sdl_entrypoint(int argc, char* argv[]) {
 	return SDL_EnterAppMainCallbacks(argc, argv, 
-                                     Host::onAttach, Host::onUpdate,
+                                     Host::onAttach, Host::onRender,
 	                                 Host::onEvent,  Host::onDetach);
 }
 

@@ -80,8 +80,9 @@ PhaseState WasmLayer::onDetach() {
 }
 
 // TODO: Remove example calls and allow user to call functions as needed
-PhaseState WasmLayer::onUpdate(float deltaTime) {
+PhaseState WasmLayer::onUpdate() {
     static bool firstTime = true;
+    
     if (firstTime) {
         firstTime = false;
         if (auto func = tryGetFunction("example")) {
@@ -104,34 +105,6 @@ PhaseState WasmLayer::onUpdate(float deltaTime) {
             call(*func);
         }
     }
-
-    return PhaseState::Continue;
-}
-
-PhaseState WasmLayer::onPrepareFrame() {
-    ImGui::Begin("WASM Module Info");
-    ImGui::Text("WASM Module: %s", m_bytecodePath.filename().string().c_str());
-    ImGui::Text("Stack Size: %u bytes", m_stackSize);
-    ImGui::Text("Heap Size: %u bytes", m_heapSize);
-
-    ImGui::Separator();
-    ImGui::Text("Available Functions:");
-    for (const auto& [name, func] : m_functionCache) {
-        ImGui::BulletText("%s", name.c_str());
-    }
-
-    ImGui::Separator();
-    ImGui::Text("Error Buffer:");
-    ImGui::TextWrapped("%s", m_errorBuffer.data());
-
-    ImGui::Separator();
-    if (ImGui::Button("Call example()")) {
-        if (auto func = tryGetFunction("example")) {
-            call(*func);
-        }
-    }
-
-    ImGui::End();
 
     return PhaseState::Continue;
 }

@@ -19,7 +19,7 @@ public:
 
     inline constexpr SDL_GPUDevice* getInternal() const { 
         // Ensure called during RenderFrame phase only
-        assert(m_Host->getCurrentPhase() == HostPhase::RenderFrame || m_Host->getCurrentPhase() == HostPhase::Attach || m_Host->getCurrentPhase() == HostPhase::Detach);
+        assert(m_host->getCurrentPhase() == HostPhase::RenderFrame || m_host->getCurrentPhase() == HostPhase::Attach || m_host->getCurrentPhase() == HostPhase::Detach);
 
         return m_device; 
     }

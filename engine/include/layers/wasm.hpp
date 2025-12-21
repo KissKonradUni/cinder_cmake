@@ -27,8 +27,7 @@ public:
 protected:
     PhaseState onAttach() override;
     PhaseState onDetach() override;
-    PhaseState onUpdate(float deltaTime) override;
-    PhaseState onPrepareFrame() override;
+    PhaseState onUpdate() override;
 
     uint32_t m_stackSize = 64 * 1024; // 64KB
     uint32_t m_heapSize = 1024 * 1024; // 1MB
