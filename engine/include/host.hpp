@@ -39,6 +39,7 @@ public:
     ~Host() = default;
 
     int run(int argc, char* argv[]);
+    void close();
     void printDebugInfo();
 
     template<typename T, typename... Args>

@@ -41,7 +41,7 @@ configure_file(imgui_shaders.hpp.in ${CMAKE_BINARY_DIR}/include/imgui_shaders.hp
 add_subdirectory(engine)
 add_subdirectory(runtime)
 # add_subdirectory(editor)
-# add_subdirectory(tests)
+add_subdirectory(tests)
 
 # Add example wasm module
 add_subdirectory(wasm-example-module)

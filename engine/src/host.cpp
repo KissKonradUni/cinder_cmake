@@ -121,6 +121,12 @@ int Host::run(int argc, char* argv[]) {
 	return SDL_RunApp(argc, argv, Host::__sdl_entrypoint, NULL);
 }
 
+void Host::close() {
+    SDL_Event quitEvent;
+    quitEvent.type = SDL_EVENT_QUIT;
+    SDL_PushEvent(&quitEvent);
+}
+
 void Host::popLayer(Layer* layer) {
     auto it = std::find_if(m_layers.begin(), m_layers.end(),
                            [layer](const std::unique_ptr<Layer>& ptr) { return ptr.get() == layer; });
