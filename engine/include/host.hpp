@@ -1,5 +1,6 @@
 #pragma once
 
+#include "world/world.hpp"
 #include "layer.hpp"
 
 #include <memory>
@@ -10,6 +11,8 @@
 #include <SDL3/SDL_main.h>
 
 namespace cinder {
+
+using namespace hex;
 
 enum class HostPhase {
     Attach,
@@ -48,6 +51,8 @@ public:
     
     inline const HostPhase& getCurrentPhase() const { return m_currentPhase; }
     inline const Time& getTime() const { return m_time; }
+    inline World* getWorld() const { return m_world.get(); }
+    inline ComponentRegistry* getComponentRegistry() { return &m_componentRegistry; }
 protected:
     static SDL_AppResult SDLCALL onAttach(void** appstate, int argc, char* argv[]);
     static SDL_AppResult SDLCALL onRender(void* appstate);
@@ -56,7 +61,9 @@ protected:
     static void SDLCALL onDetach(void* appstate, SDL_AppResult result);
     static int SDLCALL __sdl_entrypoint(int argc, char* argv[]);
 
+    ComponentRegistry m_componentRegistry;
     Time m_time;
+    std::unique_ptr<World> m_world = std::make_unique<World>(&m_componentRegistry);
     std::vector<std::unique_ptr<Layer>> m_layers;
     HostPhase m_currentPhase = HostPhase::Attach;
     static Host* __internal_appstate;
