@@ -34,6 +34,16 @@ std::optional<std::size_t> ComponentRegistry::getSize(ComponentTypeID typeID) co
     return std::nullopt;
 }
 
+std::optional<std::string_view> ComponentRegistry::getName(ComponentTypeID typeID) const {
+    for (const auto& pair : m_nameLookup) {
+        if (pair.second == typeID) {
+            return pair.first;
+        }
+    }
+    std::println("ComponentRegistry: Unknown ComponentTypeID {}", typeID);
+    return std::nullopt;
+}
+
 // UnknownComponent methods
 
 std::span<uint8_t> UnknownComponent::getData() {

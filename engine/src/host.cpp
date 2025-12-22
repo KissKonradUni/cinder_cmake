@@ -34,7 +34,6 @@ SDL_AppResult SDLCALL Host::onUpdate(void* appstate) {
     host->m_time.lastUpdateTime = host->m_time.totalTime;
 
     for (auto& layer : host->m_layers) {
-        // TODO: delta time
         auto result = layer->onUpdate(); 
         if (result == PhaseState::Failure) {
             return SDL_APP_FAILURE;

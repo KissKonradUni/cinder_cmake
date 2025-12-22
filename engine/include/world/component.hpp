@@ -18,8 +18,6 @@ struct ComponentDescriptor {
     std::size_t alignment;
 };
 
-struct IComponent {}; // Serves as nothing but a base type
-
 struct IWASMComponent {}; // TODO: Add WASM specific functionality later
 
 class ComponentRegistry {
@@ -33,7 +31,7 @@ public:
     std::optional<ComponentTypeID> registerComponent(const ComponentDescriptor& desc);
     std::optional<ComponentTypeID> getID(std::string_view stableName) const;
     std::optional<std::size_t> getSize(ComponentTypeID typeID) const;
-
+    std::optional<std::string_view> getName(ComponentTypeID typeID) const;
 private:
     std::unordered_map<std::string, ComponentTypeID> m_nameLookup;
     std::unordered_map<ComponentTypeID, size_t> m_sizes;

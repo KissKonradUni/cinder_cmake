@@ -21,6 +21,8 @@ public:
     void destroyEntity(const Entity entity);
     bool isEntityValid(const Entity entity) const;
 
+    inline const std::vector<EntityRecord>& getEntityRecords() const { return m_entities; }
+
     template<typename compType>
     std::optional<compType*> getComponent(Entity entity, ComponentTypeID typeID) {
         if (!isEntityValid(entity)) {
