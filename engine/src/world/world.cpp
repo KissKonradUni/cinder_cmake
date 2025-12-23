@@ -76,14 +76,11 @@ void World::addComponents(Entity entity, const std::vector<ComponentTypeID>& com
         // Ensure component pool exists
         if (typeID >= m_componentPools.size()) {
             m_componentPools.resize(typeID + 1);
-            m_componentPools[typeID] = std::make_unique<ComponentPool>(componentSize.value());
+            m_componentPools[typeID].reset(new ComponentPool(componentSize.value()));
         }
 
-        // I have to copy it, I don't know the type at compile time so I can't construct it directly in-place
-        ComponentPool& pool = *m_componentPools[typeID];
-        UnknownComponent newComponent(componentSize.value());
-        std::span<uint8_t> dataSpan = newComponent.getData();
-        uint32_t row = pool.add(dataSpan);
+        ComponentPool* pool = m_componentPools[typeID].get();
+        uint32_t row = pool->allocate();
 
         record.componentBits.set(typeID);
         record.components.push_back(ComponentRecord{.type = typeID, .row = row});
@@ -150,6 +147,22 @@ std::optional<const ComponentPool*> World::getReadOnlyComponentList(ComponentTyp
     } else {
         return std::nullopt;
     }
+}
+
+// WorldView
+
+std::optional<const ComponentPool*> WorldView::readRef(ComponentTypeID typeID) const {
+    // Check that system only writes the component it has access to
+    assert(m_descriptor.reads.test(typeID));
+    auto componentList = m_world.getReadOnlyComponentList(typeID);
+    return componentList;
+}
+
+std::optional<ComponentPool*> WorldView::readWriteRef(ComponentTypeID typeID) {
+    // Check that system only writes the component it has access to
+    assert(m_descriptor.writes.test(typeID));
+    auto componentList = m_world.getReadWriteComponentList(typeID);
+    return componentList;
 }
 
 } // namespace hex

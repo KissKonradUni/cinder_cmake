@@ -6,7 +6,7 @@
 namespace echo {
 
 struct EntityNameComponent {
-    std::string name;
+    char name[64];
 };
 
 PhaseState EditorLayer::onPrepareFrame() {    
@@ -27,12 +27,30 @@ PhaseState EditorLayer::onPrepareFrame() {
                 if (ImGui::TreeNode(std::format("{} (Type ID {})", 
                                                 registry.getName(compRecord.type).value_or("Unknown"), 
                                                 compRecord.type).c_str())) {
-                    // TODO: Magic number for demo purposes
+                    // TODO: Remove magic number for demo purposes
                     if (compRecord.type == 0) { // EntityNameComponent
                         Entity entity{.id = static_cast<uint32_t>(i), .generation = entityRecord.generation};
                         auto nameCompOpt = world.getComponent<EntityNameComponent>(entity, compRecord.type);
                         if (nameCompOpt.has_value()) {
-                            ImGui::Text("  Name: %s", (*nameCompOpt.value()).name.c_str());
+                            ImGui::Text("  Name: %s", (*nameCompOpt.value()).name);
+                        }
+                    } else if (compRecord.type == 1) { // TransformComponent
+                        Entity entity{.id = static_cast<uint32_t>(i), .generation = entityRecord.generation};
+                        
+                        struct Vec3 {
+                            float x, y, z;
+                        };
+
+                        struct TransformStruct {
+                            Vec3 position;
+                            Vec3 rotation;
+                            Vec3 scale;
+                        };
+
+                        const auto transformCompOpt = world.getComponent<TransformStruct>(entity, compRecord.type);
+                        if (transformCompOpt.has_value()) {
+                            TransformStruct& transform = *transformCompOpt.value();
+                            ImGui::Text("  Position: (%.2f, %.2f, %.2f)", transform.position.x, transform.position.y, transform.position.z);
                         }
                     }
                     ImGui::TreePop();

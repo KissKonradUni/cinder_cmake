@@ -1,6 +1,7 @@
 #include "world/component.hpp"
 
 #include <print>
+#include <cstring>
 
 namespace hex {
 
@@ -48,49 +49,34 @@ bool ComponentRegistry::isRegistered(ComponentTypeID typeID) const {
     return m_sizes.find(typeID) != m_sizes.end();
 }
 
-// UnknownComponent methods
-
-std::span<uint8_t> UnknownComponent::getData() {
-    return std::span<uint8_t>(data.data(), data.size());
-}
-
-void UnknownComponent::setData(const std::span<uint8_t>& newData) {
-    if (newData.size() != data.size()) {
-        std::println("UnknownComponent: New data size {} does not match existing size {}", newData.size(), data.size());
-        throw std::runtime_error("UnknownComponent: Data size mismatch");
-        return;
-    }
-    std::copy(newData.begin(), newData.end(), data.begin());
-}
-
 // ComponentPool methods
-uint32_t ComponentPool::add(const std::span<uint8_t>& componentData) {
-    if (componentData.size() != componentSize) {
-        std::println("ComponentPool: Component data size {} does not match expected size {}", componentData.size(), componentSize);
-        throw std::runtime_error("ComponentPool: Component data size mismatch");
-        return UINT32_MAX;
+
+uint32_t ComponentPool::allocate() {
+    // Reuse from free list if possible
+    if (!m_free.empty()) {
+        uint32_t row = m_free.back();
+        m_free.pop_back();
+        return row;
     }
 
-    if (!free.empty()) {
-        uint32_t row = free.back();
-        free.pop_back();
-        data[row].setData(componentData);
-        return row;
-    } else {
-        data.emplace_back(componentSize);
-        data.back().setData(componentData);
-        return static_cast<uint32_t>(data.size() - 1);
+    // Reallocate the pool if we are at capacity
+    if (this->getComponentCapacity() == this->getComponentCount()) {
+        m_data.reserve((m_componentCount + COMPONENT_ALLOCATION_CHUNK_SIZE) * m_componentSize);
     }
+
+    auto id = m_componentCount++;
+    m_data.resize(m_componentCount * m_componentSize);
+    return id;
 }
 
 void ComponentPool::remove(uint32_t row) {
-    if (row >= data.size()) {
-        std::println("ComponentPool: Row {} is out of bounds (max {})", row, data.size());
+    if (row >= m_componentCount) {
+        std::println("ComponentPool: Row {} is out of bounds (max {})", row, m_componentCount);
         // Non-critical error, just log
         return;
     }
     // Simply invalidate and add to free list
-    free.push_back(row);
+    m_free.push_back(row);
 }
 
 } // namespace hex

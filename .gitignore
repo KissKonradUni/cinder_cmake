@@ -8,3 +8,5 @@ CMakeCache.txt
 
 imgui.ini
 todo.md
+
+*.zst

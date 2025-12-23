@@ -81,17 +81,8 @@ class WorldView {
 public:
     WorldView(World& w, const SystemDescriptor& d) : m_world(w), m_descriptor(d) {}
 
-    std::optional<const ComponentPool*> read(ComponentTypeID typeID) {
-        // Check that system only reads the component it has access to
-        assert(m_descriptor.reads.test(typeID));
-        auto componentList = m_world.getReadOnlyComponentList(typeID);
-        return componentList;
-    }
-
-    template<typename T>
-    auto write() {
-        
-    }
+    std::optional<const ComponentPool*> readRef(ComponentTypeID typeID) const;
+    std::optional<ComponentPool*> readWriteRef(ComponentTypeID typeID);
 
 private:
     World& m_world;

@@ -35,6 +35,7 @@ SDL_AppResult SDLCALL Host::onUpdate(void* appstate) {
         host->m_time.lastUpdateTime = host->m_time.totalTime;
 
         // TODO: Systems run here, worker-pooled
+        host->runSystems(HostPhase::Update);
 
         for (auto& layer : host->m_layers) {
             auto result = layer->onUpdate(); 
@@ -143,6 +144,41 @@ void Host::popLayer(Layer* layer) {
     if (it != m_layers.end()) {
         (*it)->onDetach();
         m_layers.erase(it);
+    }
+}
+
+SystemID Host::registerSystem(SystemDescriptor& descriptor, SystemFuncPtr func) {
+    SystemID newID = m_nextSystemID++;
+    descriptor.m_id = newID;
+    m_systems[descriptor.phase].emplace_back(std::make_unique<System>(descriptor, func));
+    return newID;
+}
+
+void Host::unregisterSystem(SystemID systemID) {
+    for (auto& [phase, systems] : m_systems) {
+        for (auto it = systems.begin(); it != systems.end(); ++it) {
+            if ((*it)->getDescriptor().getID() == systemID) {
+                systems.erase(it);
+                return;
+            }
+        }
+    }
+}
+
+// TODO: Multithreading
+// TODO: Conflict graph for job scheduling
+void Host::runSystems(HostPhase phase) {
+    if (phase != m_currentPhase) {
+        std::println("Host: Trying to run systems for phase {}, but current phase is {}", (uint8_t)phase, (uint8_t)m_currentPhase.load());
+        return;
+    }
+
+    auto it = m_systems.find((SystemPhase)phase);
+    if (it != m_systems.end()) {
+        for (const auto& system : it->second) {
+            WorldView view(m_world, system->getDescriptor());
+            system->run(view);
+        }
     }
 }
 

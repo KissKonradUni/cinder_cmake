@@ -1,6 +1,7 @@
 #pragma once
 
 #include "world/component.hpp"
+#include "system/system.hpp"
 #include "world/world.hpp"
 #include "host_phase.hpp"
 #include "layer.hpp"
@@ -16,8 +17,6 @@
 namespace cinder {
 
 using namespace hex;
-
-
 
 struct Time {
     float renderDelta = 0.0f;
@@ -55,7 +54,12 @@ public:
 
     inline ComponentRegistry& getComponentRegistry() { return m_componentRegistry; }
     inline const ComponentRegistry& getComponentRegistry() const { return m_componentRegistry; }
+
+    SystemID registerSystem(SystemDescriptor& descriptor, SystemFuncPtr func);
+    void unregisterSystem(SystemID systemID);
 protected:
+    void runSystems(HostPhase phase);
+
     static SDL_AppResult SDLCALL onAttach(void** appstate, int argc, char* argv[]);
     static SDL_AppResult SDLCALL onRender(void* appstate);
     static SDL_AppResult SDLCALL onUpdate(void* appstate);
@@ -65,6 +69,8 @@ protected:
 
     Time m_time;
     
+    uint32_t m_nextSystemID = 0;
+    std::unordered_map<SystemPhase, std::vector<std::unique_ptr<System>>> m_systems;
     ComponentRegistry m_componentRegistry;
     World m_world{ m_componentRegistry }; 
     
