@@ -42,6 +42,9 @@ include(${WAMR_ROOT_DIR}/core/shared/utils/uncommon/shared_uncommon.cmake)
 set(SDL_SHARED ON CACHE BOOL "" FORCE)
 set(SDL_STATIC OFF CACHE BOOL "" FORCE)
 
+# Add slang to the project
+include(./slang.cmake)
+
 # Add projects with own CMakeList
 add_subdirectory(SDL)
 add_subdirectory(reflect-cpp)

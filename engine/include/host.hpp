@@ -2,10 +2,12 @@
 
 #include "world/component.hpp"
 #include "world/world.hpp"
+#include "host_phase.hpp"
 #include "layer.hpp"
 
 #include <memory>
 #include <vector>
+#include <atomic>
 
 #define SDL_MAIN_HANDLED
 #include <SDL3/SDL.h>
@@ -15,14 +17,7 @@ namespace cinder {
 
 using namespace hex;
 
-enum class HostPhase {
-    Attach,
-    Detach,
-    Other,
-    Update,
-    PrepareFrame,
-    RenderFrame
-};
+
 
 struct Time {
     float renderDelta = 0.0f;
@@ -34,6 +29,7 @@ struct Time {
 };
 
 class Host {
+friend class PhaseGuard;
 public:
     Host() = default;
     ~Host() = default;
@@ -51,7 +47,7 @@ public:
     }
     void popLayer(Layer* layer);
     
-    inline const HostPhase& getCurrentPhase() const { return m_currentPhase; }
+    inline const std::atomic<HostPhase>& getCurrentPhase() const { return m_currentPhase; }
     inline const Time& getTime() const { return m_time; }
     
     inline World& getWorld() { return m_world; }
@@ -72,11 +68,24 @@ protected:
     ComponentRegistry m_componentRegistry;
     World m_world{ m_componentRegistry }; 
     
-    HostPhase m_currentPhase = HostPhase::Attach;
+    std::atomic<HostPhase> m_currentPhase = HostPhase::Attach;
 
     std::vector<std::unique_ptr<Layer>> m_layers;
     
     static Host* __internal_appstate;
+};
+
+class PhaseGuard {
+public:
+    PhaseGuard(Host& h, HostPhase p) : m_host(h) {
+        m_prev = m_host.m_currentPhase.exchange(p, std::memory_order_acq_rel);
+    }
+    ~PhaseGuard() {
+        m_host.m_currentPhase.store(m_prev, std::memory_order_release);
+    }
+private:
+    Host& m_host;
+    HostPhase m_prev;
 };
 
 } // namespace cinder

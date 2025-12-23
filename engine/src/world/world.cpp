@@ -125,4 +125,31 @@ void World::removeComponents(Entity entity, const std::vector<ComponentTypeID>& 
     }
 }
 
+std::optional<ComponentPool*> World::getReadWriteComponentList(ComponentTypeID typeID) {
+    // Check if typeID is valid
+    if (!m_componentRegistry.isRegistered(typeID))
+    {
+        std::println("World: Unknown component type ID {}", typeID);
+        return std::nullopt;
+    }
+
+    // Check if pool exists
+    if (typeID >= m_componentPools.size() || !m_componentPools[typeID]) {
+        std::println("World: No component pool for type ID {}", typeID);
+        return std::nullopt;
+    } else {
+        return m_componentPools[typeID].get();
+    }
+}
+
+std::optional<const ComponentPool*> World::getReadOnlyComponentList(ComponentTypeID typeID) const {
+    // Get non-const version and cast to const
+    auto poolOpt = const_cast<World*>(this)->getReadWriteComponentList(typeID);
+    if (poolOpt.has_value()) {
+        return poolOpt.value();
+    } else {
+        return std::nullopt;
+    }
+}
+
 } // namespace hex

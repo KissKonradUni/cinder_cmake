@@ -27,20 +27,27 @@ SDL_AppResult SDLCALL Host::onAttach(void** appstate, int argc, char* argv[]) {
 
 SDL_AppResult SDLCALL Host::onUpdate(void* appstate) {
     Host* host = (Host*)appstate;
-    host->m_currentPhase = HostPhase::Update;
+    {
+        PhaseGuard guard(*host, HostPhase::Update);
 
-    host->m_time.totalTime = SDL_GetTicks() / 1000.0;
-    host->m_time.updateDelta = static_cast<float>(host->m_time.totalTime - host->m_time.lastUpdateTime);
-    host->m_time.lastUpdateTime = host->m_time.totalTime;
+        host->m_time.totalTime = SDL_GetTicks() / 1000.0;
+        host->m_time.updateDelta = static_cast<float>(host->m_time.totalTime - host->m_time.lastUpdateTime);
+        host->m_time.lastUpdateTime = host->m_time.totalTime;
 
-    for (auto& layer : host->m_layers) {
-        auto result = layer->onUpdate(); 
-        if (result == PhaseState::Failure) {
-            return SDL_APP_FAILURE;
+        // TODO: Systems run here, worker-pooled
+
+        for (auto& layer : host->m_layers) {
+            auto result = layer->onUpdate(); 
+            if (result == PhaseState::Failure) {
+                return SDL_APP_FAILURE;
+            }
         }
     }
 
-    host->m_currentPhase = HostPhase::Other;
+    {
+        PhaseGuard guard(*host, HostPhase::PostUpdate);
+        // TODO: Post update, single threaded systems run here
+    }
     return SDL_APP_CONTINUE;
 }
 
@@ -50,27 +57,31 @@ SDL_AppResult SDLCALL Host::onRender(void* appstate) {
     // TODO: Move to other thread
     onUpdate(appstate);
 
-    host->m_currentPhase = HostPhase::PrepareFrame;
-    for (auto& layer : host->m_layers) {
-        auto result = layer->onPrepareFrame();
-        if (result == PhaseState::Failure) {
-            return SDL_APP_FAILURE;
-        }
-    }
-
     host->m_time.totalTime = SDL_GetTicks() / 1000.0;
     host->m_time.renderDelta = static_cast<float>(host->m_time.totalTime - host->m_time.lastRenderTime);
     host->m_time.lastRenderTime = host->m_time.totalTime;
 
-    host->m_currentPhase = HostPhase::RenderFrame;
-    for (auto& layer : host->m_layers) {
-        auto result = layer->onRenderFrame();
-        if (result == PhaseState::Failure) {
-            return SDL_APP_FAILURE;
+    {
+        PhaseGuard guard(*host, HostPhase::PrepareFrame);
+        for (auto& layer : host->m_layers) {
+            auto result = layer->onPrepareFrame();
+            if (result == PhaseState::Failure) {
+                return SDL_APP_FAILURE;
+            }
         }
     }
 
-    host->m_currentPhase = HostPhase::Other;
+    {
+        PhaseGuard guard(*host, HostPhase::RenderFrame);
+        for (auto& layer : host->m_layers) {
+            auto result = layer->onRenderFrame();
+            if (result == PhaseState::Failure) {
+                return SDL_APP_FAILURE;
+            }
+        }
+    }
+
+    host->m_currentPhase = HostPhase::PostFrame;
     return SDL_APP_CONTINUE;
 }
 

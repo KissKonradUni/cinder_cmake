@@ -44,6 +44,10 @@ std::optional<std::string_view> ComponentRegistry::getName(ComponentTypeID typeI
     return std::nullopt;
 }
 
+bool ComponentRegistry::isRegistered(ComponentTypeID typeID) const {
+    return m_sizes.find(typeID) != m_sizes.end();
+}
+
 // UnknownComponent methods
 
 std::span<uint8_t> UnknownComponent::getData() {

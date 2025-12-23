@@ -1,7 +1,9 @@
 #pragma once
 
 #include "world/entity.hpp"
+#include "system/system_descriptor.hpp"
 
+#include <cassert>
 #include <memory>
 #include <vector>
 
@@ -23,6 +25,15 @@ public:
 
     inline const std::vector<EntityRecord>& getEntityRecords() const { return m_entities; }
 
+    /**
+     * @brief Get the Component object
+     * @note Most of the time you should not use this directly, but mutate components via systems or higher-level abstractions
+     * 
+     * @tparam compType The class you want the component returned as, can be UnknownComponent for generic access
+     * @param entity The ID of the entity
+     * @param typeID The type ID of the component
+     * @return std::optional<compType*> The component pointer, or nullopt if not found
+     */
     template<typename compType>
     std::optional<compType*> getComponent(Entity entity, ComponentTypeID typeID) {
         if (!isEntityValid(entity)) {
@@ -56,12 +67,35 @@ public:
 
     void addComponents(Entity entity, const std::vector<ComponentTypeID>& componentTypes);
     void removeComponents(Entity entity, const std::vector<ComponentTypeID>& componentTypes);
+    std::optional<const ComponentPool*> getReadOnlyComponentList(ComponentTypeID typeID) const;
+    std::optional<ComponentPool*> getReadWriteComponentList(ComponentTypeID typeID);
 protected:
     std::vector<EntityRecord>                   m_entities;        // Indexed by Entity.id
     std::vector<uint32_t>                       m_freeIndices;     // Reusable entity indices
     std::vector<std::unique_ptr<ComponentPool>> m_componentPools;  // Indexed by ComponentTypeID
 
     ComponentRegistry& m_componentRegistry;
+};
+
+class WorldView {
+public:
+    WorldView(World& w, const SystemDescriptor& d) : m_world(w), m_descriptor(d) {}
+
+    std::optional<const ComponentPool*> read(ComponentTypeID typeID) {
+        // Check that system only reads the component it has access to
+        assert(m_descriptor.reads.test(typeID));
+        auto componentList = m_world.getReadOnlyComponentList(typeID);
+        return componentList;
+    }
+
+    template<typename T>
+    auto write() {
+        
+    }
+
+private:
+    World& m_world;
+    const SystemDescriptor& m_descriptor;
 };
 
 } // namespace hex

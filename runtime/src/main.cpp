@@ -18,17 +18,12 @@ int main(int argc, char* argv[]) {
     auto gpuDeviceLayer = host.pushLayer<GPUDeviceLayer>(windowLayer);
     auto imguiLayer = host.pushLayer<ImGuiLayer>(windowLayer, gpuDeviceLayer, "assets/fonts/Electrolize-Regular.ttf");
     auto devtoolsLayer = host.pushLayer<DevToolsLayer>();
-    auto editorLayer = host.pushLayer<EditorLayer>();
+    auto editorLayer = host.pushLayer<EditorLayer>(); 
 
-    path currentPath;
-    auto cstrPath = SDL_GetEnvironmentVariable(SDL_GetEnvironment(), "WORKING_DIRECTORY");
-    if (cstrPath == NULL)
-        auto currentPath = std::filesystem::current_path();
-    else
-        currentPath = path(cstrPath);     
-
+    auto currentPath = std::filesystem::current_path();
     std::println("Running directory: {}", currentPath.string());
-    auto wasmLayer = host.pushLayer<WasmLayer>(currentPath / "build/wasm_modules/wasm_example_module.wasm");
+    auto wasmFilePath = currentPath / "build/wasm_modules/wasm_example_module.wasm";
+    auto wasmLayer = host.pushLayer<WasmLayer>(wasmFilePath);
 
     auto& componentRegistry = host.getComponentRegistry();
     auto componentID = componentRegistry.registerComponent(ComponentDescriptor{
