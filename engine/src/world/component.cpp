@@ -1,7 +1,7 @@
 #include "world/component.hpp"
 
-#include <print>
 #include <cstring>
+#include <print>
 
 namespace hex {
 
@@ -13,7 +13,7 @@ std::optional<ComponentTypeID> ComponentRegistry::registerComponent(const Compon
     
     ComponentTypeID typeID = m_nextTypeID++;
     m_nameLookup[desc.stableName] = typeID;
-    m_sizes[typeID] = desc.size;
+    m_descriptors[typeID] = desc;
     return typeID;
 }
 
@@ -26,10 +26,10 @@ std::optional<ComponentTypeID> ComponentRegistry::getID(std::string_view stableN
     return std::nullopt;
 }
 
-std::optional<std::size_t> ComponentRegistry::getSize(ComponentTypeID typeID) const {
-    auto it = m_sizes.find(typeID);
-    if (it != m_sizes.end()) {
-        return it->second;
+std::optional<const ComponentDescriptor*> ComponentRegistry::getDescriptor(ComponentTypeID typeID) const {
+    auto it = m_descriptors.find(typeID);
+    if (it != m_descriptors.end()) {
+        return &it->second;
     }
     std::println("ComponentRegistry: Unknown ComponentTypeID {}", typeID);
     return std::nullopt;
@@ -46,10 +46,14 @@ std::optional<std::string_view> ComponentRegistry::getName(ComponentTypeID typeI
 }
 
 bool ComponentRegistry::isRegistered(ComponentTypeID typeID) const {
-    return m_sizes.find(typeID) != m_sizes.end();
+    return m_descriptors.find(typeID) != m_descriptors.end();
 }
 
 // ComponentPool methods
+
+ComponentPool::~ComponentPool() {
+    deallocateBuffer();
+}
 
 uint32_t ComponentPool::allocate() {
     // Reuse from free list if possible
@@ -60,12 +64,14 @@ uint32_t ComponentPool::allocate() {
     }
 
     // Reallocate the pool if we are at capacity
-    if (this->getComponentCapacity() == this->getComponentCount()) {
-        m_data.reserve((m_componentCount + COMPONENT_ALLOCATION_CHUNK_SIZE) * m_componentSize);
-    }
+    reallocateBuffer(m_componentCount + COMPONENT_ALLOCATION_CHUNK_SIZE);
 
     auto id = m_componentCount++;
-    m_data.resize(m_componentCount * m_componentSize);
+    // Call constructor if provided
+    if (m_descriptor.constructor) {
+        m_descriptor.constructor(&m_data[id * m_descriptor.size]);
+    }
+
     return id;
 }
 
@@ -77,6 +83,45 @@ void ComponentPool::remove(uint32_t row) {
     }
     // Simply invalidate and add to free list
     m_free.push_back(row);
+}
+
+void ComponentPool::allocateBuffer(uint32_t newCapacity) {
+    // C-style baby
+    m_data = (uint8_t*)aligned_alloc(m_descriptor.alignment, m_descriptor.size * newCapacity);
+    m_bufferCapacity = newCapacity;
+}
+
+void ComponentPool::reallocateBuffer(uint32_t newCapacity) {
+    if (newCapacity <= m_bufferCapacity) {
+        return; // No need to reallocate
+    }
+
+    uint8_t* newData = (uint8_t*)aligned_alloc(m_descriptor.alignment, m_descriptor.size * newCapacity);
+    // Copy existing data
+    memcpy(newData, m_data, m_descriptor.size * m_componentCount);
+    // Free old data
+    deallocateBuffer();
+
+    // Update pointer and capacity
+    m_data = newData;
+    m_bufferCapacity = newCapacity;
+}
+
+void ComponentPool::deallocateBuffer() {
+    // Call destructors for all allocated components
+    if (m_descriptor.destructor) {
+        for (uint32_t i = 0; i < m_componentCount; ++i) {
+            // Skip free components
+            if (std::find(m_free.begin(), m_free.end(), i) != m_free.end()) {
+                continue;
+            }
+            m_descriptor.destructor(&m_data[i * m_descriptor.size]);
+        }
+    }
+    
+    free(m_data);
+    m_data = nullptr;
+    m_bufferCapacity = 0;
 }
 
 } // namespace hex

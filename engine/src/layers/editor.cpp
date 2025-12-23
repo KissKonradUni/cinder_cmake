@@ -5,7 +5,7 @@
 
 namespace echo {
 
-struct EntityNameComponent {
+struct NameComponent {
     char name[64];
 };
 
@@ -30,7 +30,7 @@ PhaseState EditorLayer::onPrepareFrame() {
                     // TODO: Remove magic number for demo purposes
                     if (compRecord.type == 0) { // EntityNameComponent
                         Entity entity{.id = static_cast<uint32_t>(i), .generation = entityRecord.generation};
-                        auto nameCompOpt = world.getComponent<EntityNameComponent>(entity, compRecord.type);
+                        auto nameCompOpt = world.getComponent<NameComponent>(entity, compRecord.type);
                         if (nameCompOpt.has_value()) {
                             ImGui::Text("  Name: %s", (*nameCompOpt.value()).name);
                         }

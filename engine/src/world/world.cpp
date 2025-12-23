@@ -67,16 +67,18 @@ void World::addComponents(Entity entity, const std::vector<ComponentTypeID>& com
 
     EntityRecord& record = m_entities[entity.id];
     for (const auto& typeID : componentTypes) {
-        auto componentSize = m_componentRegistry.getSize(typeID);
-        if (!componentSize.has_value()) {
+        auto componentDescriptorOpt = m_componentRegistry.getDescriptor(typeID);
+        if (!componentDescriptorOpt.has_value()) {
             std::println("World: Cannot add component of unknown type ID {} to entity ID {}", typeID, entity.id);
             continue;
         }
 
+        auto& compDesc = *componentDescriptorOpt.value();
+
         // Ensure component pool exists
         if (typeID >= m_componentPools.size()) {
             m_componentPools.resize(typeID + 1);
-            m_componentPools[typeID].reset(new ComponentPool(componentSize.value()));
+            m_componentPools[typeID].reset(new ComponentPool(compDesc));
         }
 
         ComponentPool* pool = m_componentPools[typeID].get();

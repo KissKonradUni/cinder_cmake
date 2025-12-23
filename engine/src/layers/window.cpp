@@ -39,6 +39,7 @@ EventState WindowLayer::onEvent(SDL_Event* event) {
 
 PhaseState WindowLayer::onDetach() {
     SDL_DestroyWindow(this->m_window);
+    SDL_Quit();
     return PhaseState::Success;
 }
 

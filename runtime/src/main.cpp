@@ -7,8 +7,14 @@
 #include "layers/devtools.hpp"
 #include "layers/gpu_device.hpp"
 
+static uint32_t s_nameComponentCounter = 0;
 struct NameComponent {
     char name[64];
+    
+    NameComponent() : name() {
+        strcpy(name, std::format("Unnamed_{:02}", s_nameComponentCounter++).c_str());
+    }
+    ~NameComponent() = default;
 };
 
 struct Vec3 {
@@ -56,45 +62,33 @@ int main(int argc, char* argv[]) {
     auto editorLayer = host.pushLayer<EditorLayer>(); 
 
     auto currentPath = std::filesystem::current_path();
-    std::println("Running directory: {}", currentPath.string());
     auto wasmFilePath = currentPath / "build/wasm_modules/wasm_example_module.wasm";
     auto wasmLayer = host.pushLayer<WasmLayer>(wasmFilePath);
 
     auto& componentRegistry = host.getComponentRegistry();
-    componentID = componentRegistry.registerComponent(ComponentDescriptor{
-        .stableName = "EntityNameComponent",
-        .size = sizeof(NameComponent),
-        .alignment = alignof(NameComponent)
-    }).value();
-    transformComponentID = componentRegistry.registerComponent(ComponentDescriptor{
-        .stableName = "TransformComponent",
-        .size = sizeof(TransformStruct),
-        .alignment = alignof(TransformStruct)
-    }).value();
+    componentID = componentRegistry
+        .registerComponent(quick_component_desc<NameComponent>(
+            "EntityNameComponent"
+        )).value();
+    transformComponentID = componentRegistry
+        .registerComponent(quick_component_desc<TransformStruct>(
+            "TransformComponent"
+        )).value();
 
     auto& world = host.getWorld();
 
     for (int i = 0; i < 10; i++) {
         auto entity = world.createEntity();
         world.addComponents(entity, {componentID, transformComponentID});
-        auto nameComponentOpt = world.getComponent<NameComponent>(entity, componentID);
-        if (nameComponentOpt.has_value()) {
-            std::string name = "Entity_" + std::to_string(entity.id);
-            strncpy((*nameComponentOpt.value()).name, name.c_str(), sizeof((*nameComponentOpt.value()).name));
-
-            std::println("Created entity ID {} with name {}", entity.id, nameComponentOpt.value()->name);
-        }
     }
 
-    DynBitset readBits;
-    readBits.set(transformComponentID);
-    DynBitset writeBits;
-    writeBits.set(transformComponentID);
+    DynBitset bitset;
+    bitset.set(transformComponentID);
 
     SystemDescriptor moveTransformDesc(
         SystemPhase::Update,
-        readBits,
-        writeBits,
+        bitset,
+        bitset,
         true
     );
 

@@ -4,6 +4,7 @@
 #include <optional>
 #include <cstdint>
 #include <string>
+#include <memory>
 #include <vector>
 #include <print>
 #include <span>
@@ -12,17 +13,44 @@ namespace hex {
 
 using ComponentTypeID = uint32_t;
 
+using CompCtorFunc = void(*)(void* memory);
+using CompDtorFunc = void(*)(void* memory);
+
 struct ComponentDescriptor {
     std::string stableName;   // e.g. "cinder.Transform"
     std::size_t size;
     std::size_t alignment;
+    CompCtorFunc constructor = nullptr;
+    CompDtorFunc destructor = nullptr;
 };
 
-struct IWASMComponent {}; // TODO: Add WASM specific functionality later
+template<typename T>
+void component_ctor(void* p) {
+    std::construct_at(static_cast<T*>(p));
+}
+
+template<typename T>
+void component_dtor(void* p) {
+    std::destroy_at(static_cast<T*>(p));
+}
+
+template<typename T>
+ComponentDescriptor quick_component_desc(std::string name) {
+    static_assert(std::is_trivially_copyable_v<T>);
+    return ComponentDescriptor{
+        .stableName  = std::move(name),
+        .size        = sizeof(T),
+        .alignment   = alignof(T),
+        .constructor = component_ctor<T>,
+        .destructor  = component_dtor<T>
+    };
+}
+
+struct WASMComponent {}; // TODO: Add WASM specific functionality later
 
 class ComponentRegistry {
 public:
-    ComponentRegistry(): m_nameLookup(), m_sizes(), m_nextTypeID(0) {}
+    ComponentRegistry() = default;
     ~ComponentRegistry() = default;
 
     ComponentRegistry(const ComponentRegistry&) = delete;
@@ -30,27 +58,32 @@ public:
 
     std::optional<ComponentTypeID> registerComponent(const ComponentDescriptor& desc);
     std::optional<ComponentTypeID> getID(std::string_view stableName) const;
-    std::optional<std::size_t> getSize(ComponentTypeID typeID) const;
+    std::optional<const ComponentDescriptor*> getDescriptor(ComponentTypeID typeID) const;
     std::optional<std::string_view> getName(ComponentTypeID typeID) const;
     bool isRegistered(ComponentTypeID typeID) const;
 private:
     std::unordered_map<std::string, ComponentTypeID> m_nameLookup;
-    std::unordered_map<ComponentTypeID, size_t> m_sizes;
-    ComponentTypeID m_nextTypeID;
+    std::unordered_map<ComponentTypeID, ComponentDescriptor> m_descriptors;
+    ComponentTypeID m_nextTypeID = 0;
 };
 
 // This is just a pointer to raw data, type erased
 struct UnknownComponent {};
 
-#define COMPONENT_ALLOCATION_CHUNK_SIZE 16
+#define COMPONENT_ALLOCATION_CHUNK_SIZE 64
 
 // Templated functions get implemented here to avoid linker errors
 // Also type erasure is used here to allow WASM defined components
 struct ComponentPool {
-    ComponentPool(std::size_t compSize): m_componentSize(compSize), m_data(), m_free() {
-        m_data.reserve(COMPONENT_ALLOCATION_CHUNK_SIZE * m_componentSize);
+    ComponentPool(const ComponentDescriptor& desc): 
+        m_data(nullptr),
+        m_descriptor(desc),
+        m_componentCount(0),
+        m_bufferCapacity(0) 
+    {
+        allocateBuffer(COMPONENT_ALLOCATION_CHUNK_SIZE);
     }
-    ~ComponentPool() = default;
+    ~ComponentPool();
 
     uint32_t allocate();
     void remove(uint32_t row);
@@ -62,27 +95,25 @@ struct ComponentPool {
             std::println("ComponentPool: Row {} is out of bounds (max {})", row, m_componentCount);
             return std::nullopt;
         }
-        return (compType*)&m_data[row * m_componentSize];
+        return (compType*)&m_data[row * m_descriptor.size];
     }
     
     // You may use UnknownComponent if you don't know the type at compile time (e.g. for WASM components)
     template<typename compType>
     std::span<compType> getAll() {
-        return std::span<compType>((compType*)m_data.data(), m_componentCount);
+        return std::span<compType>((compType*)m_data, m_componentCount);
     }
 protected:
-    inline std::size_t getComponentCount() const {
-        return m_componentCount;
-    }
+    void allocateBuffer(uint32_t newCapacity);
+    void reallocateBuffer(uint32_t newCapacity);
+    void deallocateBuffer();
 
-    inline std::size_t getComponentCapacity() const {
-        return m_data.capacity() / m_componentSize;
-    }
-
-    const std::size_t m_componentSize;
-    std::vector<uint8_t> m_data;
+    uint8_t* m_data;
     std::vector<uint32_t> m_free;
+    const ComponentDescriptor& m_descriptor;
+    
     uint32_t m_componentCount = 0;
+    uint32_t m_bufferCapacity = 0;
 };
 
 };
