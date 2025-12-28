@@ -63,24 +63,34 @@ PhaseState ImGuiLayer::onPrepareFrame() {
     }
 
     static bool show_demo_window = false;
-    if (show_demo_window)
-        ImGui::ShowDemoWindow(&show_demo_window);
     if (ImGui::MenuItem("Demo")) {
         show_demo_window = !show_demo_window;
     }
+    if (show_demo_window)
+        ImGui::ShowDemoWindow(&show_demo_window);
 
-    static bool show_about = false;
-    if (ImGui::MenuItem("About")) {
-        show_about = !show_about;
+    static bool show_about = true;
+    if (ImGui::Button("About")) {
+        ImGui::OpenPopup("About##Cinder");
     }
-
-    if (show_about) {
-        ImGui::Begin("About", &show_about);
+    
+    if (ImGui::BeginPopupModal("About##Cinder", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("%s", version.name.data());
         ImGui::Text("Version: %s", version.version.data());
         ImGui::Text("Build Type: %s", version.build_type.data());
-        ImGui::End();
+        ImGui::Separator();
+        if (ImGui::TextLink("https://konrads.hu")) {
+            SDL_OpenURL("https://konrads.hu");
+        }
+        ImGui::SameLine();
+        ImGui::Text("© 2025 Konrád Soma Kiss");
+        ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - 116);
+        if (ImGui::Button("Close", ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
     }
+    
     ImGui::EndMainMenuBar();
 
     return PhaseState::Continue;

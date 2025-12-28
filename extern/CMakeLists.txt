@@ -47,4 +47,6 @@ include(./slang.cmake)
 
 # Add projects with own CMakeList
 add_subdirectory(SDL)
+
+add_compile_definitions(REFLECT_CPP_C_ARRAYS_OR_INHERITANCE)
 add_subdirectory(reflect-cpp)

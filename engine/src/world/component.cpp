@@ -64,7 +64,8 @@ uint32_t ComponentPool::allocate() {
     }
 
     // Reallocate the pool if we are at capacity
-    reallocateBuffer(m_componentCount + COMPONENT_ALLOCATION_CHUNK_SIZE);
+    if (m_componentCount >= m_bufferCapacity)
+        reallocateBuffer(m_componentCount + COMPONENT_ALLOCATION_CHUNK_SIZE);
 
     auto id = m_componentCount++;
     // Call constructor if provided
@@ -100,7 +101,9 @@ void ComponentPool::reallocateBuffer(uint32_t newCapacity) {
     // Copy existing data
     memcpy(newData, m_data, m_descriptor.size * m_componentCount);
     // Free old data
-    deallocateBuffer();
+    // deallocateBuffer();
+    // -- not needed to call destructors here since we are just copying the raw data
+    free(m_data);
 
     // Update pointer and capacity
     m_data = newData;

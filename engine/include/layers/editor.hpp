@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../layer.hpp"
+#include "world/entity.hpp"
 
 namespace echo {
 
@@ -13,6 +14,8 @@ public:
 protected:
     PhaseState onPrepareFrame() override;
     EventState onEvent(SDL_Event* event) override;
+
+    hex::Entity m_selectedEntity = {UINT32_MAX, 0};
 };
 
 } // namespace echo
