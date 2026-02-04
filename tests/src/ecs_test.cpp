@@ -25,8 +25,9 @@ TEST_CASE("Engine can run in headless mode", "[engine][headless]") {
 }
 
 TEST_CASE("Entity IDs are reused safely", "[engine][ecs]") {
+    Time time;
     ComponentRegistry cr;
-    World w(cr);
+    World w(cr, &time);
 
     Entity a = w.createEntity();
     w.destroyEntity(a);
@@ -38,8 +39,9 @@ TEST_CASE("Entity IDs are reused safely", "[engine][ecs]") {
 }
 
 TEST_CASE("Invalid entities are detected", "[engine][ecs]") {
+    Time time;
     ComponentRegistry cr;
-    World w(cr);
+    World w(cr, &time);
 
     Entity a = w.createEntity();
     w.destroyEntity(a);
@@ -64,7 +66,8 @@ TEST_CASE("Add/remove component") {
         .alignment = alignof(ExampleComponent)
     });
 
-    World w(cr);
+    Time time;
+    World w(cr, &time);
     Entity e = w.createEntity();
 
     // Add component

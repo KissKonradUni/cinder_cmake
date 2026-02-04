@@ -31,35 +31,6 @@ struct TransformStruct {
     vec3 scale;
 };
 
-struct ExampleGarbageComponent {
-    float anotherValue = 3.14f;
-    int someValue = 42;
-    vec2 anotherVector = {0.5f, 0.75f};
-    vec3 vectorValue = {1.0f, 2.0f, 3.0f};
-    vec4 colorValue = {1.0f, 0.0f, 0.0f, 1.0f};
-    mat3 someMatrix = {
-        1.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 1.0f
-    };
-    mat4 anotherMatrix = {
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f
-    };
-    cinder::str someString;
-
-    ExampleGarbageComponent() {
-        cinder::str_init(someString, 64);
-        cinder::str_copy(someString, "Hello, here is some garbage string!");
-    }
-
-    ~ExampleGarbageComponent() {
-        cinder::str_free(someString);
-    }
-};
-
 hex::ComponentTypeID transformComponentID;
 
 void moveTransforms(hex::WorldView& view) {
@@ -74,8 +45,8 @@ void moveTransforms(hex::WorldView& view) {
     int index = 0;
     for (auto& comp : components) {
         comp.position.x = index;
-        comp.position.y = index * 2;
-        comp.position.z = index * 3;
+        comp.position.y = 0;
+        comp.position.z = view.getTime()->totalTime;
         index++;
     }
 }
@@ -112,25 +83,12 @@ int main(int argc, char* argv[]) {
                 {.name = "scale",    .type = as_field_enum<vec3>(), .offset = offsetof(TransformStruct, scale)}
             }
         )).value();
-    auto garbageComponentID = componentRegistry
-        .registerComponent(quick_component_desc<ExampleGarbageComponent>(
-            "ExampleGarbageComponent", {
-                {.name = "anotherValue", .type = as_field_enum<float>(),       .offset = offsetof(ExampleGarbageComponent, anotherValue)},
-                {.name = "someValue",    .type = as_field_enum<int>(),         .offset = offsetof(ExampleGarbageComponent, someValue)},
-                {.name = "anotherVector",.type = as_field_enum<vec2>(),        .offset = offsetof(ExampleGarbageComponent, anotherVector)},
-                {.name = "vectorValue",  .type = as_field_enum<vec3>(),        .offset = offsetof(ExampleGarbageComponent, vectorValue)},
-                {.name = "colorValue",   .type = as_field_enum<vec4>(),        .offset = offsetof(ExampleGarbageComponent, colorValue)},
-                {.name = "someMatrix",   .type = as_field_enum<mat3>(),        .offset = offsetof(ExampleGarbageComponent, someMatrix)},
-                {.name = "anotherMatrix",.type = as_field_enum<mat4>(),        .offset = offsetof(ExampleGarbageComponent, anotherMatrix)},
-                {.name = "someString",   .type = as_field_enum<cinder::str>(), .offset = offsetof(ExampleGarbageComponent, someString)},
-            }
-        )).value();
 
     auto& world = host.getWorld();
 
     for (int i = 0; i < 100; i++) {
         auto entity = world.createEntity();
-        world.addComponents(entity, {componentID, transformComponentID, garbageComponentID});
+        world.addComponents(entity, {componentID, transformComponentID});
     }
 
     DynBitset bitset;

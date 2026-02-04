@@ -3,9 +3,9 @@
 #include <print>
 
 namespace hex {
-
-World::World(ComponentRegistry& componentRegistry)
-	: m_entities(), m_freeIndices(), m_componentPools(),
+    
+World::World(ComponentRegistry& componentRegistry, const cinder::Time* time)
+	: m_entities(), m_freeIndices(), m_componentPools(), m_time(time),
 	  m_componentRegistry(componentRegistry) {
 	m_entities.reserve(ALLOCATION_CHUNK_SIZE);
 }

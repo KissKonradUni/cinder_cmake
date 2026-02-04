@@ -1,5 +1,6 @@
 #pragma once
 
+#include "data/time.hpp"
 #include "world/entity.hpp"
 #include "system/system_descriptor.hpp"
 
@@ -13,7 +14,7 @@ namespace hex {
 
 class World {
 public:
-    World(ComponentRegistry& componentRegistry);
+    World(ComponentRegistry& componentRegistry, const cinder::Time* time);
     ~World();
 
     World(const World&) = delete;
@@ -69,11 +70,14 @@ public:
     void removeComponents(Entity entity, const std::vector<ComponentTypeID>& componentTypes);
     std::optional<const ComponentPool*> getReadOnlyComponentList(ComponentTypeID typeID) const;
     std::optional<ComponentPool*> getReadWriteComponentList(ComponentTypeID typeID);
+
+    inline const cinder::Time* getTime() const { return m_time; }
 protected:
     std::vector<EntityRecord>                   m_entities;        // Indexed by Entity.id
     std::vector<uint32_t>                       m_freeIndices;     // Reusable entity indices
     std::vector<std::unique_ptr<ComponentPool>> m_componentPools;  // Indexed by ComponentTypeID
 
+    const cinder::Time* m_time;
     ComponentRegistry& m_componentRegistry;
 };
 
@@ -84,6 +88,7 @@ public:
     std::optional<const ComponentPool*> readRef(ComponentTypeID typeID) const;
     std::optional<ComponentPool*> readWriteRef(ComponentTypeID typeID);
 
+    inline const cinder::Time* getTime() const { return m_world.getTime(); }
 private:
     World& m_world;
     const SystemDescriptor& m_descriptor;
