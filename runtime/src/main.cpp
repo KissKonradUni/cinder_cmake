@@ -26,9 +26,9 @@ struct NameComponent {
 };
 
 struct TransformStruct {
-    vec3 position;
-    vec3 rotation;
-    vec3 scale;
+    hex::vec3 position;
+    hex::vec3 rotation;
+    hex::vec3 scale;
 };
 
 hex::ComponentTypeID transformComponentID;
