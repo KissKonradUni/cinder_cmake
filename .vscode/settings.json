@@ -4,6 +4,7 @@
         "CMAKE_CXX_COMPILER": "/usr/bin/clang++"
     },
     "cmake.debugConfig": {
-        "type": "lldb"
+        "type": "lldb",
+        "cwd": "${workspaceFolder}"
     }
 }

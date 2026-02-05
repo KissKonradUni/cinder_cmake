@@ -21,7 +21,6 @@ Requires clang 18+ (gcc not tested yet), CMake 4.1+, and Slang installed to `~/.
 
 ```bash
 cmake -B build
-cmake -B build  # yes twice, there's a cmake bug I haven't tracked down yet
 cmake --build build -j$(nproc)
 ```
 

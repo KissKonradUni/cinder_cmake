@@ -12,6 +12,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Configuration parameters
 set(SLANG_ROOT_DIR ~/.local/bin/slang CACHE INTERNAL "slang_root_dir")
 
+# WAMR root, needed by multiple subprojects; define before add_subdirectory()
+set(WAMR_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/wasm-micro-runtime CACHE INTERNAL "wamr_root_dir")
+
 # Define build types, default to Release
 set(default_build_type "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
