@@ -55,10 +55,10 @@ TEST_CASE("Invalid entities are detected", "[engine][ecs]") {
 }
 
 struct ExampleComponent {
-    float x, y, z, w;
+    hex::vec4 data;
 };
 
-TEST_CASE("Add/remove component") {
+TEST_CASE("Add/remove component", "[engine][ecs]") {
     ComponentRegistry cr;
     auto compID = cr.registerComponent(ComponentDescriptor{
         .stableName = "ExampleComponent",
@@ -75,21 +75,21 @@ TEST_CASE("Add/remove component") {
     const auto compPtr = w.getComponent<ExampleComponent>(e, compID.value());
     REQUIRE(compPtr.has_value());
     ExampleComponent* comp = compPtr.value();
-    comp->x = 1.0f;
-    comp->y = 2.0f;
-    comp->z = 3.0f;
-    comp->w = 4.0f; 
+    comp->data.x = 1.0f;
+    comp->data.y = 2.0f;
+    comp->data.z = 3.0f;
+    comp->data.w = 4.0f; 
     
     // Reaquire the component and check values
     const auto compPtr2 = w.getComponent<ExampleComponent>(e, compID.value());
     REQUIRE(compPtr2.has_value());
     ExampleComponent* comp2 = compPtr2.value();
-    REQUIRE(comp2->x == 1.0f);
-    REQUIRE(comp2->y == 2.0f);
-    REQUIRE(comp2->z == 3.0f);
-    REQUIRE(comp2->w == 4.0f); 
+    REQUIRE(comp2->data.x == 1.0f);
+    REQUIRE(comp2->data.y == 2.0f);
+    REQUIRE(comp2->data.z == 3.0f);
+    REQUIRE(comp2->data.w == 4.0f); 
 
-    // Remove component
+    // Remove component (should print a warning but not crash)
     w.removeComponents(e, { compID.value() });
     const auto compPtr3 = w.getComponent<ExampleComponent>(e, compID.value());
     REQUIRE(!compPtr3.has_value());

@@ -49,6 +49,12 @@ void moveTransforms(hex::WorldView& view) {
         comp.position.z = view.getTime()->totalTime;
         index++;
     }
+
+    static double lastTime = 0.0;
+    if (view.getTime()->totalTime - lastTime > 0.1) {
+        lastTime = view.getTime()->totalTime;
+        echo::logDebug(std::format("Moved {} transforms", components.size()));
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -103,7 +109,12 @@ int main(int argc, char* argv[]) {
 
     host.registerSystem(moveTransformDesc, moveTransforms);
 
+    echo::logInfo("Starting host...");
+
     // Run host
     auto result = host.run(argc, argv);
+    
+    echo::logInfo(std::format("Host exited with code \"{}\".", result));
+
     return result;
 }

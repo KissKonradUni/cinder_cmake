@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logging.hpp"
 #include "system/system.hpp"
 #include "system/worker.hpp"
 
@@ -64,6 +65,8 @@ protected:
     static int SDLCALL __sdl_entrypoint(int argc, char* argv[]);
 
     Time m_time;
+
+    echo::Logger m_logger;
     
     uint32_t m_nextSystemID = 0;
     std::unordered_map<SystemPhase, std::vector<std::unique_ptr<System>>> m_systems;
