@@ -24,6 +24,8 @@ public:
 
     template<typename Ret = void, typename... Args>
     Ret call(wasm_function_inst_t func, Args... args);
+
+    void restartRuntime();
 protected:
     PhaseState onAttach() override;
     PhaseState onDetach() override;

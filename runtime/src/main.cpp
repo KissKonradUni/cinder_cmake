@@ -53,7 +53,6 @@ void moveTransforms(hex::WorldView& view) {
     static double lastTime = 0.0;
     if (view.getTime()->totalTime - lastTime > 0.1) {
         lastTime = view.getTime()->totalTime;
-        echo::logDebug(std::format("Moved {} transforms", components.size()));
     }
 }
 
@@ -70,9 +69,9 @@ int main(int argc, char* argv[]) {
     auto devtoolsLayer = host.pushLayer<DevToolsLayer>();
     auto editorLayer = host.pushLayer<EditorLayer>(); 
 
-    //auto currentPath = std::filesystem::current_path();
-    //auto wasmFilePath = currentPath / "build/wasm_modules/wasm_example_module.wasm";
-    //auto wasmLayer = host.pushLayer<WasmLayer>(wasmFilePath);
+    auto currentPath = std::filesystem::current_path();
+    auto wasmFilePath = currentPath / "build/wasm_modules/wasm_example_module.wasm";
+    auto wasmLayer = host.pushLayer<WasmLayer>(wasmFilePath);
 
     auto& componentRegistry = host.getComponentRegistry();
     auto componentID = componentRegistry

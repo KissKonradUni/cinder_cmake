@@ -85,6 +85,7 @@ PhaseState WasmLayer::onUpdate() {
     
     if (firstTime) {
         firstTime = false;
+        
         if (auto func = tryGetFunction("example")) {
             call(*func);
         }
@@ -95,14 +96,16 @@ PhaseState WasmLayer::onUpdate() {
             std::println("WASM fib({}) = {}", n, result);
         }
 
-        // TODO: some way to restart the module safely
-        // Omitting test as it will crash the runtime
-        //if (auto func = tryGetFunction("trigger_error")) {
-        //    call(*func);
-        //}
-
         if (auto func = tryGetFunction("non_existent_function")) {
             call(*func);
+        }
+
+        if (auto func = tryGetFunction("trigger_error")) { 
+            call(*func); 
+        }
+
+        if (auto func = tryGetFunction("example")) { 
+            call(*func); 
         }
     }
 
@@ -112,7 +115,7 @@ PhaseState WasmLayer::onUpdate() {
 std::optional<wasm_function_inst_t> WasmLayer::tryGetFunction(const std::string& name) {
     if (m_moduleInstance == nullptr) {
         std::println("WASM module instance is not valid when trying to get function '{}'", name);
-        return {};
+        return std::nullopt;
     }
     
     if (m_functionCache.find(name) != m_functionCache.end()) {
@@ -122,7 +125,7 @@ std::optional<wasm_function_inst_t> WasmLayer::tryGetFunction(const std::string&
     wasm_function_inst_t func = wasm_runtime_lookup_function(m_moduleInstance, name.c_str());
     if (func == nullptr) {
         std::println("Failed to find '{}' function in WASM module: {}", name, m_errorBuffer.data());
-        return {};
+        return std::nullopt;
     }
 
     m_functionCache[name] = func;
@@ -156,6 +159,28 @@ Ret WasmLayer::call(wasm_function_inst_t func, Args... args) {
 
     if constexpr (!std::is_void_v<Ret>)
         return static_cast<Ret>(stack[0]);
+}
+
+void WasmLayer::restartRuntime() {
+    if (m_execEnvironment) wasm_runtime_destroy_exec_env(m_execEnvironment);
+    if (m_moduleInstance) wasm_runtime_deinstantiate(m_moduleInstance);
+
+    m_moduleInstance = wasm_runtime_instantiate(m_module, m_stackSize, m_heapSize, m_errorBuffer.data(), m_errorBuffer.size());
+    if (m_moduleInstance == NULL) {
+        std::println("Failed to instantiate WASM module: {}", m_errorBuffer.data());
+        wasm_runtime_unload(m_module);
+        return;
+    }
+
+    m_execEnvironment = wasm_runtime_create_exec_env(m_moduleInstance, m_stackSize); 
+    if (m_execEnvironment == NULL) { 
+        std::println("Failed to create WASM execution environment"); 
+        wasm_runtime_deinstantiate(m_moduleInstance); 
+        wasm_runtime_unload(m_module); 
+        return; 
+    } 
+    
+    m_functionCache.clear();
 }
 
 } // namespace hex

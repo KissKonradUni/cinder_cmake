@@ -1,8 +1,30 @@
 #include "wasm_exports.h"
 
+static uint32_t counter = 0;
+
+void int_to_str(uint32_t integer, char* buffer) {
+    if (integer == 0) {
+        buffer[0] = '0'; buffer[1] = '\0'; return; 
+    } 
+    char temp[11];
+    int index = 0;
+    while (integer > 0) {
+        temp[index++] = '0' + (integer % 10); integer /= 10; 
+    } 
+    for (int i = 0; i < index; i++) 
+    { 
+        buffer[i] = temp[index - i - 1]; 
+    } 
+    buffer[index] = '\0'; 
+}
+
 void WASM_EXPORT(example)() {
-    char buffer[255] = "Hello from WebAssembly!";
+    counter++;
+
+    char buffer[255] = "Hello from WebAssembly! Counter: ";
     wasm_size_t length = 255;
+
+    int_to_str(counter, buffer + 33);
     
     put((wasm_ptr_t)buffer, length);
 }
