@@ -1,14 +1,14 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
+#include <span>
 
 namespace hex {
 
 struct DynBitset {
     DynBitset();
     explicit DynBitset(uint32_t bitCount);
-    explicit DynBitset(const std::vector<DynBitset>& flags);
+    explicit DynBitset(const std::span<const DynBitset>& flags);
 
     void set(uint32_t bit);
     void remove(uint32_t bit);
@@ -27,7 +27,8 @@ struct DynBitset {
 
     bool operator==(const DynBitset& other) const;
 private:
-    std::vector<uint64_t> data;
+    uint64_t* m_data;
+    uint32_t m_dataLength;
 };
 
 } // namespace hex

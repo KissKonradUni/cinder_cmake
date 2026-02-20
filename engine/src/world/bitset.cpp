@@ -2,30 +2,31 @@
 
 namespace hex {
 
-DynBitset::DynBitset(): data(0) {}
+DynBitset::DynBitset() {}
 
 DynBitset::DynBitset(uint32_t bitCount) {
-    const uint32_t numU64 = (bitCount + 63) / 64;
-    data.resize(numU64, 0);
+    this->m_dataLength = (bitCount + 63) / 64;    
+    this->m_data = new uint64_t[this->m_dataLength]{0};
 }
 
-DynBitset::DynBitset(const std::vector<DynBitset>& flags) {
+DynBitset::DynBitset(const std::span<const DynBitset>& flags) {
     if (flags.empty()) {
-        data.clear();
+        this->m_data = new uint64_t[1]{0};
         return;
     }
 
-    auto maxSize = flags[0].data.size();
+    auto maxSize = flags[0].m_dataLength;
     for (const auto& flag : flags) {
-        if (flag.data.size() > maxSize) {
-            maxSize = flag.data.size();
+        if (flag.m_dataLength > maxSize) {
+            maxSize = flag.m_dataLength;
         }
     }
 
-    data.resize(maxSize, 0);
+    this->m_dataLength = maxSize;
+    this->m_data = new uint64_t[this->m_dataLength]{0};
     for (const auto& flag : flags) {
-        for (size_t i = 0; i < flag.data.size(); ++i) {
-            data[i] |= flag.data[i];
+        for (size_t i = 0; i < flag.m_dataLength; ++i) {
+            this->m_data[i] |= flag.m_data[i];
         }
     }
 }
@@ -33,45 +34,53 @@ DynBitset::DynBitset(const std::vector<DynBitset>& flags) {
 void DynBitset::set(uint32_t bit) {
     const uint32_t index = bit / 64;
     const uint32_t offset = bit % 64;
-    if (index >= data.size()) {
-        data.resize(index + 1, 0);
+    if (index >= m_dataLength) {
+        // Resize data array
+        uint32_t newLength = index + 1;
+        uint64_t* newData = new uint64_t[newLength]{0};
+        for (uint32_t i = 0; i < m_dataLength; ++i) {
+            newData[i] = m_data[i];
+        }
+        delete[] m_data;
+        m_data = newData;
+        m_dataLength = newLength;
     }
-    data[index] |= (uint64_t(1) << offset);
+    m_data[index] |= (uint64_t(1) << offset);
 }
 
 void DynBitset::remove(uint32_t bit) {
     const uint32_t index = bit / 64;
     const uint32_t offset = bit % 64;
-    if (index >= data.size()) {
+    if (index >= m_dataLength) {
         return;
     }
-    data[index] &= ~(uint64_t(1) << offset);
+    m_data[index] &= ~(uint64_t(1) << offset);
 }
 
 void DynBitset::clear() {
-    for (auto& block : data) {
-        block = 0;
+    for (uint32_t i = 0; i < m_dataLength; ++i) {
+        m_data[i] = 0;
     }
 }
 
 bool DynBitset::test(uint32_t bit) const {
     const uint32_t index = bit / 64;
     const uint32_t offset = bit % 64;
-    if (index >= data.size()) {
+    if (index >= m_dataLength) {
         return false;
     }
-    return (data[index] & (uint64_t(1) << offset)) != 0;
+    return (m_data[index] & (uint64_t(1) << offset)) != 0;
 }
 
 bool DynBitset::contains(const DynBitset& other) const {
-    const size_t minSize = std::min(data.size(), other.data.size());
+    const size_t minSize = std::min(m_dataLength, other.m_dataLength);
     for (size_t i = 0; i < minSize; ++i) {
-        if ((data[i] & other.data[i]) != other.data[i]) {
+        if ((m_data[i] & other.m_data[i]) != other.m_data[i]) {
             return false;
         }
     }
-    for (size_t i = minSize; i < other.data.size(); ++i) {
-        if (other.data[i] != 0) {
+    for (size_t i = minSize; i < other.m_dataLength; ++i) {
+        if (other.m_data[i] != 0) {
             return false;
         }
     }
@@ -80,40 +89,51 @@ bool DynBitset::contains(const DynBitset& other) const {
 
 uint32_t DynBitset::bitCount() const {
     uint32_t count = 0;
-    for (const auto& block : data) {
+    for (uint32_t i = 0; i < m_dataLength; ++i) {
+        uint64_t block = m_data[i];
         count += __builtin_popcountll(block);
     }
     return count;
 }
 
 uint32_t DynBitset::bitLength() const {
-    return data.size() * 64;
+    return m_dataLength * 64;
 }
 
 DynBitset DynBitset::operator|(const DynBitset& other) const {
     DynBitset result;
-    const size_t maxSize = std::max(data.size(), other.data.size());
-    result.data.resize(maxSize, 0);
+    const size_t maxSize = std::max(m_dataLength, other.m_dataLength);
+    result.m_dataLength = maxSize;
+    result.m_data = new uint64_t[maxSize]{0};
     for (size_t i = 0; i < maxSize; ++i) {
-        uint64_t a = (i < data.size()) ? data[i] : 0;
-        uint64_t b = (i < other.data.size()) ? other.data[i] : 0;
-        result.data[i] = a | b;
+        uint64_t thisBlock = (i < m_dataLength) ? m_data[i] : 0;
+        uint64_t otherBlock = (i < other.m_dataLength) ? other.m_data[i] : 0;
+        result.m_data[i] = thisBlock | otherBlock;
     }
     return result;
 }
 
 DynBitset DynBitset::operator&(const DynBitset& other) const {
     DynBitset result;
-    const size_t minSize = std::min(data.size(), other.data.size());
-    result.data.resize(minSize, 0);
+    const size_t minSize = std::min(m_dataLength, other.m_dataLength);
+    result.m_dataLength = minSize;
+    result.m_data = new uint64_t[minSize]{0};
     for (size_t i = 0; i < minSize; ++i) {
-        result.data[i] = data[i] & other.data[i];
+        result.m_data[i] = m_data[i] & other.m_data[i];
     }
     return result;
 }
 
 bool DynBitset::operator==(const DynBitset& other) const {
-    return data == other.data;
+    if (m_dataLength != other.m_dataLength) {
+        return false;
+    }
+    for (size_t i = 0; i < m_dataLength; ++i) {
+        if (m_data[i] != other.m_data[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace hex
