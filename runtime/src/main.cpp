@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
     auto wasmLayer = host.pushLayer<WasmLayer>(wasmFilePath);
 
     auto& componentRegistry = host.getComponentRegistry();
-    auto componentID = componentRegistry
+    auto nameComponentID = componentRegistry
         .registerComponent(quick_component_desc<NameComponent>(
             "EntityNameComponent", {
                 {.name = "name", .type = as_field_enum<cinder::str>(), .offset = offsetof(NameComponent, name)}
@@ -93,7 +93,17 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < 100; i++) {
         auto entity = world.createEntity();
-        world.addComponents(entity, {componentID, transformComponentID});
+        world.addComponents(entity, {nameComponentID, transformComponentID});
+    }
+
+    for (int i = 50; i < 75; i++) {
+        auto entity = Entity(i, 0);
+        world.destroyEntity(entity);
+    }
+
+    for (int i = 50; i < 75; i++) {
+        auto entity = world.createEntity();
+        world.addComponents(entity, {nameComponentID, transformComponentID});
     }
 
     DynBitset bitset;

@@ -81,6 +81,10 @@ protected:
     ComponentRegistry& m_componentRegistry;
 };
 
+// TODO: This won't work if a system needs to read/write a specific set of components,
+// so I have to modify it to a cached version that keeps entityID lists for each archetype,
+// and returns an iterator to simplify the way you access elements. Right now a system needs 3 calls
+// to get the components and one of them is a template, which is not ideal.
 class WorldView {
 public:
     WorldView(World& w, const SystemDescriptor& d) : m_world(w), m_descriptor(d) {}

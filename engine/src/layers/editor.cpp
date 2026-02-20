@@ -32,7 +32,7 @@ void RenderComponent(const size_t entityID, const hex::EntityRecord& entity, con
     }
 
     ImGui::Separator();
-    ImGui::Text("%s:", descriptor->stableName.c_str());
+    ImGui::Text("%s (%03i):", descriptor->stableName.c_str(), component.row);
     ImGui::Separator();
     ImGui::BeginTable("##component_table", 2, ImGuiTableFlags_SizingStretchSame);
     ImGui::TableSetupColumn("Field", 0, 0.33f);
@@ -144,17 +144,26 @@ PhaseState EditorLayer::onPrepareFrame() {
     auto& registry = m_host->getComponentRegistry();
     const auto& entities = world.getEntityRecords();
 
-    ImGui::Text("Entities (%zu):", entities.size());
-    for (uint32_t i = 0; i < entities.size(); ++i) {
-        const auto& entity = entities[i];
-        ImGui::PushID(static_cast<int>(i));
-        if (ImGui::Selectable(
-            std::format("Entity {} (Gen {})", i, entity.generation).c_str(),
-            m_selectedEntity.id == i && m_selectedEntity.generation == entity.generation
-        )) {
-            m_selectedEntity = {i, entity.generation};
+    static bool collapse = false;
+    static char buffer[256];
+    snprintf(buffer, sizeof(buffer), "Entities: %zu", entities.size());
+    if (ImGui::Button(buffer, ImVec2(-1, 0))) {
+        collapse = !collapse;
+    }
+    if (!collapse) {
+        for (uint32_t i = 0; i < entities.size(); ++i) {
+            const auto& entity = entities[i];
+            ImGui::PushID(static_cast<int>(i));
+            
+            snprintf(buffer, sizeof(buffer), "Entity %02u@%02u", i, entity.generation);
+            if (ImGui::Selectable(
+                buffer,
+                m_selectedEntity.id == i && m_selectedEntity.generation == entity.generation
+            )) {
+                m_selectedEntity = {i, entity.generation};
+            }
+            ImGui::PopID();
         }
-        ImGui::PopID();
     }
 
     ImGui::End();
@@ -163,7 +172,7 @@ PhaseState EditorLayer::onPrepareFrame() {
     if (m_selectedEntity.id != UINT32_MAX) {
         const auto& entityRecord = entities[m_selectedEntity.id];
         if (entityRecord.generation == m_selectedEntity.generation) {
-            ImGui::Text("Entity %u (Gen %u)", m_selectedEntity.id, m_selectedEntity.generation);
+            ImGui::Text("Entity %02u@%02u", m_selectedEntity.id, m_selectedEntity.generation);
             const auto& componentRecords = entityRecord.components;
             for (const auto& compRecord : componentRecords) {
                 RenderComponent(m_selectedEntity.id, entityRecord, compRecord, registry, world);

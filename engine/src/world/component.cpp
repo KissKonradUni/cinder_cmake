@@ -59,6 +59,12 @@ uint32_t ComponentPool::allocate() {
     // Reuse from free list if possible
     if (!m_free.empty()) {
         uint32_t row = m_free.back();
+
+        // Call constructor if provided
+        if (m_descriptor.constructor) {
+            m_descriptor.constructor(&m_data[row * m_descriptor.size]);
+        }
+        
         m_free.pop_back();
         return row;
     }
@@ -83,6 +89,9 @@ void ComponentPool::remove(uint32_t row) {
         return;
     }
     // Simply invalidate and add to free list
+    if (m_descriptor.destructor) {
+        m_descriptor.destructor(&m_data[row * m_descriptor.size]);
+    }
     m_free.push_back(row);
 }
 

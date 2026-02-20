@@ -10,3 +10,8 @@ imgui.ini
 todo.md
 
 *.zst
+
+extern/reflect-cpp
+extern/SDL
+extern/wasm-micro-runtime
+extern/imgui
