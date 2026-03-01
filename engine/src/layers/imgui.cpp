@@ -96,51 +96,33 @@ PhaseState ImGuiLayer::onPrepareFrame() {
     return PhaseState::Continue;
 }
 
-PhaseState ImGuiLayer::onRenderFrame() {
+PhaseState ImGuiLayer::onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, SDL_GPUTexture** swapchainTexture) {
     ImGui::Render(); // Bad naming, prepares draw data
-
-    // Aquire Command Buffer
-    SDL_GPUCommandBuffer* cmdbuf = SDL_AcquireGPUCommandBuffer(m_gpuDevice->getInternal());
-    if (cmdbuf == NULL)
-    {
-        std::println("AcquireGPUCommandBuffer failed: %s", SDL_GetError());
-        return PhaseState::Failure;
-    }
 
     // Aquire ImGui Draw Data
     ImDrawData* draw_data = ImGui::GetDrawData();
-    ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, cmdbuf);
-
-    // Acquire Swapchain Texture
-    SDL_GPUTexture* swapchainTexture;
-    if (!SDL_WaitAndAcquireGPUSwapchainTexture(cmdbuf, m_window->getInternal(), &swapchainTexture, NULL, NULL)) {
-        std::println("WaitAndAcquireGPUSwapchainTexture failed: %s", SDL_GetError());
-        return PhaseState::Failure;
-    }
+    ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, *commandBuffer);
 
     // TODO: Remove clear so it gets drawn above other content
     // Clear Swapchain Texture
     if (swapchainTexture != NULL)
     {
         SDL_GPUColorTargetInfo colorTargetInfo = { 0 };
-        colorTargetInfo.texture = swapchainTexture;
+        colorTargetInfo.texture = *swapchainTexture;
         colorTargetInfo.clear_color = (SDL_FColor){ 0.3f, 0.6f, 0.5f, 1.0f };
-        colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
         colorTargetInfo.mip_level = 0;
         colorTargetInfo.layer_or_depth_plane = 0;
         colorTargetInfo.cycle = false;
 
-        SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(cmdbuf, &colorTargetInfo, 1, NULL);
+        SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(*commandBuffer, &colorTargetInfo, 1, NULL);
         
         // Render ImGui
-        ImGui_ImplSDLGPU3_RenderDrawData(draw_data, cmdbuf, renderPass);
+        ImGui_ImplSDLGPU3_RenderDrawData(draw_data, *commandBuffer, renderPass);
         
         SDL_EndGPURenderPass(renderPass);
     }
-
-    // Submit command buffer
-    SDL_SubmitGPUCommandBuffer(cmdbuf);
 
     return PhaseState::Continue;
 }

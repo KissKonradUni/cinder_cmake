@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SDL3/SDL_gpu.h"
+
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_events.h>
 
@@ -37,7 +39,7 @@ protected:
      */
     virtual PhaseState onUpdate() { return PhaseState::Continue; }
     virtual PhaseState onPrepareFrame() { return PhaseState::Continue; }
-    virtual PhaseState onRenderFrame() { return PhaseState::Continue; }
+    virtual PhaseState onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, SDL_GPUTexture** swapchainTexture) { return PhaseState::Continue; }
 
     Host* m_host = nullptr;
 };

@@ -7,6 +7,7 @@
 #include "layers/imgui.hpp"
 #include "layers/editor.hpp"
 #include "layers/window.hpp"
+#include "layers/renderer.hpp"
 #include "layers/devtools.hpp"
 #include "layers/gpu_device.hpp"
 
@@ -65,13 +66,15 @@ int main(int argc, char* argv[]) {
     Host host;
     auto windowLayer = host.pushLayer<WindowLayer>();
     auto gpuDeviceLayer = host.pushLayer<GPUDeviceLayer>(windowLayer);
+    auto rendererLayer = host.pushLayer<RendererLayer>(windowLayer, gpuDeviceLayer);
+    
     auto imguiLayer = host.pushLayer<ImGuiLayer>(windowLayer, gpuDeviceLayer, "assets/fonts/Electrolize-Regular.ttf");
     auto devtoolsLayer = host.pushLayer<DevToolsLayer>();
     auto editorLayer = host.pushLayer<EditorLayer>(); 
 
-    auto currentPath = std::filesystem::current_path();
-    auto wasmFilePath = currentPath / "build/wasm_modules/wasm_example_module.wasm";
-    auto wasmLayer = host.pushLayer<WasmLayer>(wasmFilePath);
+    //auto currentPath = std::filesystem::current_path();
+    //auto wasmFilePath = currentPath / "build/wasm_modules/wasm_example_module.wasm";
+    //auto wasmLayer = host.pushLayer<WasmLayer>(wasmFilePath);
 
     auto& componentRegistry = host.getComponentRegistry();
     auto nameComponentID = componentRegistry

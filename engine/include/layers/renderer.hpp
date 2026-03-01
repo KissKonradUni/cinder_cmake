@@ -4,20 +4,17 @@
 #include "window.hpp"
 #include "gpu_device.hpp"
 
-#include <filesystem>
-
-namespace echo {
+namespace prism {
 
 using namespace cinder;
-using namespace prism;
 
 using namespace std::filesystem;
 
-class ImGuiLayer: public Layer {
+class RendererLayer: public Layer {
 public:
-    ImGuiLayer(WindowLayer* window, GPUDeviceLayer* gpuDevice, path fontPath = "") : 
-        m_window(window), m_gpuDevice(gpuDevice), m_fontPath(fontPath) {}
-    ~ImGuiLayer() override = default;
+    RendererLayer(WindowLayer* window, GPUDeviceLayer* gpuDevice) : 
+        m_window(window), m_gpuDevice(gpuDevice) {}
+    ~RendererLayer() override = default;
 
 protected:
     PhaseState onAttach() override;
@@ -25,10 +22,15 @@ protected:
     EventState onEvent(SDL_Event* event) override;
     PhaseState onPrepareFrame() override;
     PhaseState onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, SDL_GPUTexture** swapchainTexture) override;
-
+    
+    void loadShader(const std::filesystem::path& shaderPath);
+    void createQuad();
+    void createPipeline();
+    
+    void loadAssets();
+    
     WindowLayer* m_window;
     GPUDeviceLayer* m_gpuDevice;
-    path m_fontPath;
 };
 
-} // namespace echo
+} // namespace prism

@@ -74,11 +74,27 @@ SDL_AppResult SDLCALL Host::onRender(void* appstate) {
 
     {
         PhaseGuard guard(*host, HostPhase::RenderFrame);
+
+        SDL_GPUCommandBuffer* commandBuffer = nullptr;
+        SDL_GPUTexture* swapchainTexture = nullptr;
+
         for (auto& layer : host->m_layers) {
-            auto result = layer->onRenderFrame();
+            auto result = layer->onRenderFrame(&commandBuffer, &swapchainTexture);
             if (result == PhaseState::Failure) {
+                if (swapchainTexture == nullptr) {
+                    // If we failed before acquiring swapchain texture,
+                    // we can safely cancel the command buffer to avoid submitting an incomplete frame
+                    SDL_CancelGPUCommandBuffer(commandBuffer);
+                    commandBuffer = nullptr;
+                    break;
+                }
+
                 return SDL_APP_FAILURE;
             }
+        }
+
+        if (commandBuffer) {
+            SDL_SubmitGPUCommandBuffer(commandBuffer);
         }
     }
 

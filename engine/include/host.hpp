@@ -20,6 +20,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+namespace prism { // Forward declare GPUDeviceLayer to avoid circular dependency with Host
+    class GPUDeviceLayer;
+}
+
 namespace cinder {
 
 using namespace hex;

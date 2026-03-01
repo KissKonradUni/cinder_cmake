@@ -26,6 +26,7 @@ public:
 protected:
     PhaseState onAttach() override;
     PhaseState onDetach() override;
+    PhaseState onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, SDL_GPUTexture** swapchainTexture) override;
 
     WindowLayer* m_window;
     SDL_GPUDevice* m_device = nullptr;

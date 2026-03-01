@@ -15,3 +15,5 @@ extern/reflect-cpp
 extern/SDL
 extern/wasm-micro-runtime
 extern/imgui
+
+assets/shaders/*.spv

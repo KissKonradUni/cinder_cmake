@@ -22,5 +22,7 @@ else ()
     target_compile_options(cinder_engine PRIVATE -mavx2)
 endif()
 
+find_package(slang REQUIRED PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH)
+
 # Add external libraries
-target_link_libraries(cinder_engine PUBLIC imgui SDL3::SDL3 reflectcpp vmlib slang)
+target_link_libraries(cinder_engine PUBLIC imgui SDL3::SDL3 reflectcpp vmlib slang::slang)
