@@ -32,7 +32,7 @@ PhaseState GPUDeviceLayer::onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, S
     // Aquire command buffer
     auto commandBufferPtr = SDL_AcquireGPUCommandBuffer(m_device);
     if (!commandBufferPtr) {
-        std::println("Failed to acquire GPU command buffer: {}", SDL_GetError());
+        echo::logWarning(std::format("Failed to acquire GPU command buffer: {}", SDL_GetError()));
         return PhaseState::Failure;
     }
     *commandBuffer = commandBufferPtr;
@@ -41,7 +41,16 @@ PhaseState GPUDeviceLayer::onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, S
     SDL_GPUTexture* swapchainTexturePtr = nullptr;
     auto result = SDL_AcquireGPUSwapchainTexture(commandBufferPtr, m_window->getInternal(), &swapchainTexturePtr, NULL, NULL);
     if (!swapchainTexturePtr || result == false) {
-        std::println("Failed to acquire swapchain texture: {}", SDL_GetError());
+        static bool hasLoggedSwapchainError = false;
+        if (!hasLoggedSwapchainError) {
+            echo::logWarning(std::format("Failed to acquire swapchain texture: {}", (result == false) ? SDL_GetError() : "NULL texture returned"));
+            hasLoggedSwapchainError = true;
+            echo::logWarning("This warning will only be logged once to avoid spamming the console.");
+        }
+        SDL_CancelGPUCommandBuffer(commandBufferPtr);
+        *commandBuffer = nullptr;
+        
+        *swapchainTexture = nullptr;
         return PhaseState::Failure;
     }
     *swapchainTexture = swapchainTexturePtr;

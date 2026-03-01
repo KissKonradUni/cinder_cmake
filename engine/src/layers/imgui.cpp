@@ -50,6 +50,11 @@ PhaseState ImGuiLayer::onAttach() {
 }
 
 PhaseState ImGuiLayer::onPrepareFrame() {
+    if (m_frameInFlight) {
+        // Prevent starting a new ImGui frame if the previous one is still in flight
+        return PhaseState::Continue;
+    }
+
     ImGui_ImplSDLGPU3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
@@ -93,6 +98,8 @@ PhaseState ImGuiLayer::onPrepareFrame() {
     
     ImGui::EndMainMenuBar();
 
+    m_frameInFlight = true;
+
     return PhaseState::Continue;
 }
 
@@ -123,6 +130,8 @@ PhaseState ImGuiLayer::onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, SDL_G
         
         SDL_EndGPURenderPass(renderPass);
     }
+
+    m_frameInFlight = false;
 
     return PhaseState::Continue;
 }

@@ -29,6 +29,8 @@ protected:
     WindowLayer* m_window;
     GPUDeviceLayer* m_gpuDevice;
     path m_fontPath;
+
+    bool m_frameInFlight = false;
 };
 
 } // namespace echo
