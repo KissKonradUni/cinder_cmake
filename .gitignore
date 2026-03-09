@@ -17,3 +17,4 @@ extern/wasm-micro-runtime
 extern/imgui
 
 assets/shaders/*.spv
+assets/models/*.*

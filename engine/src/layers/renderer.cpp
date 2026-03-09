@@ -156,7 +156,7 @@ void RendererLayer::loadShader(const std::filesystem::path& shaderPath) {
         .num_samplers = 0,
         .num_storage_textures = 0,
         .num_storage_buffers = 0,
-        .num_uniform_buffers = 0,
+        .num_uniform_buffers = 1,
         .props = 0
     };
     vertexGpuShader = SDL_CreateGPUShader(m_gpuDevice->getInternal(), &vertexCreateInfo);
@@ -180,61 +180,7 @@ SDL_GPUBuffer* quadVertexBuffer = nullptr;
 SDL_GPUBuffer* quadIndexBuffer = nullptr;
 SDL_GPUBuffer* drawIndirectBuffer = nullptr;
 
-struct Vertex {
-    vec3 position;
-    vec3 normal;
-    vec2 uv;
-};
-
-#define USE_CUBE
-
-#ifdef USE_CUBE
-#define VERTEX_COUNT 24
-#define INDEX_COUNT  36
-
-Vertex quadVertices[VERTEX_COUNT] = {
-    // Face 1
-    { vec3(-0.238129f, -0.350876f, -0.087637f), vec3(-0.8145f, -0.0149f, -0.5800f), vec2(0.375000f, 0.000000f) },
-    { vec3(-0.405827f,  0.063021f,  0.137232f), vec3(-0.8145f, -0.0149f, -0.5800f), vec2(0.625000f, 0.000000f) },
-    { vec3(-0.169106f,  0.343438f, -0.202370f), vec3(-0.8145f, -0.0149f, -0.5800f), vec2(0.625000f, 0.250000f) },
-    { vec3(-0.001408f, -0.070460f, -0.427239f), vec3(-0.8145f, -0.0149f, -0.5800f), vec2(0.375000f, 0.250000f) },
-    // Face 2
-    { vec3(-0.001408f, -0.070460f, -0.427239f), vec3( 0.4734f,  0.5608f, -0.6792f), vec2(0.375000f, 0.250000f) },
-    { vec3(-0.169106f,  0.343438f, -0.202370f), vec3( 0.4734f,  0.5608f, -0.6792f), vec2(0.625000f, 0.250000f) },
-    { vec3( 0.238129f,  0.350876f,  0.087637f), vec3( 0.4734f,  0.5608f, -0.6792f), vec2(0.625000f, 0.500000f) },
-    { vec3( 0.405827f, -0.063021f, -0.137232f), vec3( 0.4734f,  0.5608f, -0.6792f), vec2(0.375000f, 0.500000f) },
-    // Face 3
-    { vec3( 0.405827f, -0.063021f, -0.137232f), vec3( 0.8145f,  0.0149f,  0.5800f), vec2(0.375000f, 0.500000f) },
-    { vec3( 0.238129f,  0.350876f,  0.087637f), vec3( 0.8145f,  0.0149f,  0.5800f), vec2(0.625000f, 0.500000f) },
-    { vec3( 0.001408f,  0.070460f,  0.427239f), vec3( 0.8145f,  0.0149f,  0.5800f), vec2(0.625000f, 0.750000f) },
-    { vec3( 0.169106f, -0.343438f,  0.202370f), vec3( 0.8145f,  0.0149f,  0.5800f), vec2(0.375000f, 0.750000f) },
-    // Face 4
-    { vec3( 0.169106f, -0.343438f,  0.202370f), vec3(-0.4734f, -0.5608f,  0.6792f), vec2(0.375000f, 0.750000f) },
-    { vec3( 0.001408f,  0.070460f,  0.427239f), vec3(-0.4734f, -0.5608f,  0.6792f), vec2(0.625000f, 0.750000f) },
-    { vec3(-0.405827f,  0.063021f,  0.137232f), vec3(-0.4734f, -0.5608f,  0.6792f), vec2(0.625000f, 1.000000f) },
-    { vec3(-0.238129f, -0.350876f, -0.087637f), vec3(-0.4734f, -0.5608f,  0.6792f), vec2(0.375000f, 1.000000f) },
-    // Face 5
-    { vec3(-0.001408f, -0.070460f, -0.427239f), vec3( 0.3354f, -0.8278f, -0.4497f), vec2(0.125000f, 0.500000f) },
-    { vec3( 0.405827f, -0.063021f, -0.137232f), vec3( 0.3354f, -0.8278f, -0.4497f), vec2(0.375000f, 0.500000f) },
-    { vec3( 0.169106f, -0.343438f,  0.202370f), vec3( 0.3354f, -0.8278f, -0.4497f), vec2(0.375000f, 0.750000f) },
-    { vec3(-0.238129f, -0.350876f, -0.087637f), vec3( 0.3354f, -0.8278f, -0.4497f), vec2(0.125000f, 0.750000f) },
-    // Face 6
-    { vec3( 0.238129f,  0.350876f,  0.087637f), vec3(-0.3354f,  0.8278f,  0.4497f), vec2(0.625000f, 0.500000f) },
-    { vec3(-0.169106f,  0.343438f, -0.202370f), vec3(-0.3354f,  0.8278f,  0.4497f), vec2(0.875000f, 0.500000f) },
-    { vec3(-0.405827f,  0.063021f,  0.137232f), vec3(-0.3354f,  0.8278f,  0.4497f), vec2(0.875000f, 0.750000f) },
-    { vec3( 0.001408f,  0.070460f,  0.427239f), vec3(-0.3354f,  0.8278f,  0.4497f), vec2(0.625000f, 0.750000f) },
-};
-
-uint32_t quadIndices[INDEX_COUNT] = {
-     0,  1,  2,   0,  2,  3,
-     4,  5,  6,   4,  6,  7,
-     8,  9, 10,   8, 10, 11,
-    12, 13, 14,  12, 14, 15,
-    16, 17, 18,  16, 18, 19,
-    20, 21, 22,  20, 22, 23,
-};
-
-#else
+/*
 #define VERTEX_COUNT 4
 #define INDEX_COUNT  6
 
@@ -249,24 +195,42 @@ uint32_t quadIndices[INDEX_COUNT] = {
     0, 1, 2,
     2, 3, 0
 };
+*/
 
-#endif
+SDL_GPUIndexedIndirectDrawCommand drawCommands[1] = { 0 };
 
-SDL_GPUIndexedIndirectDrawCommand drawCommands[1] = {
-    {
-        .num_indices = INDEX_COUNT,
+struct UniformData {
+    float boundsMin[4]; // xyz = min, w = padding (std140 alignment)
+    float boundsMax[4]; // xyz = max, w = padding
+    float time;
+    float _pad[3];      // pad to 16-byte multiple
+};
+UniformData frameUniformData = {};
+
+void RendererLayer::createQuad(std::unique_ptr<codex::LoadedMesh>& mesh) {
+    uint32_t vertexCount = static_cast<uint32_t>(mesh->submeshes[0].vertexCount);
+    uint32_t indexCount = static_cast<uint32_t>(mesh->submeshes[0].indexCount);
+
+    drawCommands[0] = {
+        .num_indices = indexCount,
         .num_instances = 1,
         .first_index = 0,
         .vertex_offset = 0,
         .first_instance = 0
-    }
-};
+    };
+    frameUniformData.boundsMin[0] = mesh->quantizationBounds.min.x;
+    frameUniformData.boundsMin[1] = mesh->quantizationBounds.min.y;
+    frameUniformData.boundsMin[2] = mesh->quantizationBounds.min.z;
+    frameUniformData.boundsMin[3] = 0.0f;
+    frameUniformData.boundsMax[0] = mesh->quantizationBounds.max.x;
+    frameUniformData.boundsMax[1] = mesh->quantizationBounds.max.y;
+    frameUniformData.boundsMax[2] = mesh->quantizationBounds.max.z;
+    frameUniformData.boundsMax[3] = 0.0f;
 
-void RendererLayer::createQuad() {
     // Vertex buffer init
     SDL_GPUBufferCreateInfo createInfo = {
         .usage = SDL_GPU_BUFFERUSAGE_VERTEX,
-        .size = sizeof(Vertex) * VERTEX_COUNT,
+        .size = static_cast<Uint32>(sizeof(codex::P_Vertex) * vertexCount),
         .props = 0
     };
     quadVertexBuffer = SDL_CreateGPUBuffer(m_gpuDevice->getInternal(), &createInfo);
@@ -277,7 +241,7 @@ void RendererLayer::createQuad() {
     
     SDL_GPUTransferBufferCreateInfo transferCreateInfo = {
         .usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
-        .size = sizeof(Vertex) * VERTEX_COUNT,
+        .size = static_cast<Uint32>(sizeof(codex::P_Vertex) * vertexCount),
         .props = 0
     };
     auto vertexTransferBuffer = SDL_CreateGPUTransferBuffer(
@@ -290,19 +254,19 @@ void RendererLayer::createQuad() {
         .offset = 0,
     };
     auto transferPtr = SDL_MapGPUTransferBuffer(m_gpuDevice->getInternal(), vertexTransferBuffer, false);
-    SDL_memcpy(transferPtr, quadVertices, sizeof(Vertex) * VERTEX_COUNT);
+    SDL_memcpy(transferPtr, mesh->vertices.data(), sizeof(codex::P_Vertex) * vertexCount);
     SDL_UnmapGPUTransferBuffer(m_gpuDevice->getInternal(), vertexTransferBuffer);
     
     // Index buffer init
     createInfo.usage = SDL_GPU_BUFFERUSAGE_INDEX;
-    createInfo.size = sizeof(uint32_t) * INDEX_COUNT;
+    createInfo.size = sizeof(uint32_t) * indexCount;
     quadIndexBuffer = SDL_CreateGPUBuffer(m_gpuDevice->getInternal(), &createInfo);
     if (!quadIndexBuffer) {
         echo::logError(std::format("Failed to create quad index buffer. Error: {}", SDL_GetError()));
         return;
     }
 
-    transferCreateInfo.size = sizeof(uint32_t) * INDEX_COUNT;
+    transferCreateInfo.size = sizeof(uint32_t) * indexCount;
     auto indexTransferBuffer = SDL_CreateGPUTransferBuffer(
         m_gpuDevice->getInternal(), 
         &transferCreateInfo
@@ -313,7 +277,7 @@ void RendererLayer::createQuad() {
         .offset = 0,
     };
     transferPtr = SDL_MapGPUTransferBuffer(m_gpuDevice->getInternal(), indexTransferBuffer, false);
-    SDL_memcpy(transferPtr, quadIndices, sizeof(uint32_t) * INDEX_COUNT);
+    SDL_memcpy(transferPtr, mesh->indices.data(), sizeof(uint32_t) * indexCount);
     SDL_UnmapGPUTransferBuffer(m_gpuDevice->getInternal(), indexTransferBuffer);
 
     // Command buffer init
@@ -346,7 +310,7 @@ void RendererLayer::createQuad() {
     SDL_GPUBufferRegion copyRegion = {
         .buffer = quadVertexBuffer,
         .offset = 0,
-        .size = sizeof(Vertex) * VERTEX_COUNT
+        .size = static_cast<Uint32>(sizeof(codex::P_Vertex) * vertexCount)
     };
     SDL_UploadToGPUBuffer(
         copyPass,
@@ -356,7 +320,7 @@ void RendererLayer::createQuad() {
     );
 
     copyRegion.buffer = quadIndexBuffer;
-    copyRegion.size = sizeof(uint32_t) * INDEX_COUNT;
+    copyRegion.size = sizeof(uint32_t) * indexCount;
     SDL_UploadToGPUBuffer(
         copyPass,
         &indexTransferLocation,
@@ -378,12 +342,37 @@ void RendererLayer::createQuad() {
 }
 
 SDL_GPUGraphicsPipeline* graphicsPipeline = nullptr;
+SDL_GPUTexture* depthTexture = nullptr;
+SDL_GPUTextureCreateInfo depthTextureInfo = {
+    .type             = SDL_GPU_TEXTURETYPE_2D,
+    .format           = SDL_GPU_TEXTUREFORMAT_D32_FLOAT,
+    .usage            = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET,
+    .width            = 1,
+    .height           = 1,
+    .layer_count_or_depth = 1,
+    .num_levels       = 1,
+    .sample_count     = SDL_GPU_SAMPLECOUNT_1,
+    .props            = 0
+};
+int viewportWidth = 800;
+int viewportHeight = 600;
+bool framebufferResized = false;
 
 void RendererLayer::createPipeline() {
+    // Create depth texture sized to the window
+    SDL_GetWindowSize(m_window->getInternal(), &viewportWidth, &viewportHeight);
+    depthTextureInfo.width = viewportWidth;
+    depthTextureInfo.height = viewportHeight;
+    depthTexture = SDL_CreateGPUTexture(m_gpuDevice->getInternal(), &depthTextureInfo);
+    if (!depthTexture) {
+        echo::logError(std::format("Failed to create depth texture. Error: {}", SDL_GetError()));
+        return;
+    }
+
     SDL_GPUVertexBufferDescription bufferDescription[1] = {
         {
             .slot = 0,
-            .pitch = sizeof(Vertex),
+            .pitch = sizeof(codex::P_Vertex),
             .input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
             .instance_step_rate = 0
         }
@@ -393,20 +382,20 @@ void RendererLayer::createPipeline() {
         {
             .location = 0,
             .buffer_slot = 0,
-            .format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
-            .offset = offsetof(Vertex, position)
+            .format = SDL_GPU_VERTEXELEMENTFORMAT_USHORT4_NORM, // uint16 [0,65535] -> float [0,1]
+            .offset = offsetof(codex::P_Vertex, position)
         },
         {
             .location = 1,
             .buffer_slot = 0,
-            .format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3,
-            .offset = offsetof(Vertex, normal)
+            .format = SDL_GPU_VERTEXELEMENTFORMAT_SHORT2_NORM,  // int16 [-32767,32767] -> float [-1,1]
+            .offset = offsetof(codex::P_Vertex, normal)
         },
         {
             .location = 2,
             .buffer_slot = 0,
-            .format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2,
-            .offset = offsetof(Vertex, uv)
+            .format = SDL_GPU_VERTEXELEMENTFORMAT_USHORT2_NORM, // uint16 [0,65535] -> float [0,1]
+            .offset = offsetof(codex::P_Vertex, uv)
         }
     };
 
@@ -469,15 +458,15 @@ void RendererLayer::createPipeline() {
             },
             .compare_mask = 0x0,
             .write_mask = 0x0,
-            .enable_depth_test = false,
-            .enable_depth_write = false,
+            .enable_depth_test = true,
+            .enable_depth_write = true,
             .enable_stencil_test = false
         },
         .target_info = {
             .color_target_descriptions = colorTargetDescriptions,
             .num_color_targets = 1,
             .depth_stencil_format = SDL_GPU_TEXTUREFORMAT_D32_FLOAT,
-            .has_depth_stencil_target = false
+            .has_depth_stencil_target = true
         },
         .props = 0
     };
@@ -491,8 +480,22 @@ void RendererLayer::createPipeline() {
 
 // TODO: Asset and shader manager
 void RendererLayer::loadAssets() {
-    loadShader("assets/shaders/basic");
-    createQuad();
+    loadShader("assets/shaders/newFormat");
+
+    // Temporary test for mesh loading
+    auto meshPath = std::filesystem::current_path() / "assets/models/plastic_monobloc_chair_01_1k.gltf";
+    auto outputPath = std::filesystem::current_path() / "assets/models/plastic_monobloc_chair_01_1k.cemf";
+
+    codex::LoadedMesh::convertUsingAssimp(meshPath, outputPath);
+    auto loadedMesh = codex::LoadedMesh::loadFromFile(outputPath);
+    if (loadedMesh) {
+        echo::logInfo(std::format("Mesh loaded successfully: {} vertices, {} indices.", loadedMesh->vertices.size(), loadedMesh->indices.size()));
+    } else {
+        echo::logError("Failed to load mesh.");
+        return;
+    }
+
+    createQuad(loadedMesh);
     createPipeline();
 }
 
@@ -512,6 +515,11 @@ PhaseState RendererLayer::onDetach() {
 };
 
 EventState RendererLayer::onEvent(SDL_Event* event) {
+    if (event->type == SDL_EVENT_WINDOW_RESIZED) {
+        SDL_GetWindowSize(m_window->getInternal(), &viewportWidth, &viewportHeight);
+        framebufferResized = true;
+    }
+    
     return EventState::Propagate;
 };
 
@@ -520,6 +528,19 @@ PhaseState RendererLayer::onPrepareFrame() {
 };
 
 PhaseState RendererLayer::onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, SDL_GPUTexture** swapchainTexture) {
+    if (framebufferResized) {
+        SDL_ReleaseGPUTexture(m_gpuDevice->getInternal(), depthTexture);
+        depthTextureInfo.width = viewportWidth;
+        depthTextureInfo.height = viewportHeight;
+        depthTexture = SDL_CreateGPUTexture(m_gpuDevice->getInternal(), &depthTextureInfo);
+        if (!depthTexture) {
+            echo::logError(std::format("Failed to recreate depth texture after resize. Error: {}", SDL_GetError()));
+            return PhaseState::Continue;
+        }
+
+        framebufferResized = false;
+    }
+    
     SDL_GPUColorTargetInfo colorTargetInfo = { 
         .texture = *swapchainTexture,
         .mip_level = 0,
@@ -529,12 +550,36 @@ PhaseState RendererLayer::onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, SD
         .store_op = SDL_GPU_STOREOP_STORE,
         .cycle = false
     };
-    SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(*commandBuffer, &colorTargetInfo, 1, NULL);
+    SDL_GPUDepthStencilTargetInfo depthTargetInfo = {
+        .texture          = depthTexture,
+        .clear_depth      = 1.0f,
+        .load_op          = SDL_GPU_LOADOP_CLEAR,
+        .store_op         = SDL_GPU_STOREOP_DONT_CARE,
+        .stencil_load_op  = SDL_GPU_LOADOP_DONT_CARE,
+        .stencil_store_op = SDL_GPU_STOREOP_DONT_CARE,
+        .cycle            = false,
+        .clear_stencil    = 0
+    };
+    SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(*commandBuffer, &colorTargetInfo, 1, &depthTargetInfo);
 
     SDL_BindGPUGraphicsPipeline(renderPass, graphicsPipeline);
     
     float time = m_host->getTime().totalTime;
-    SDL_PushGPUFragmentUniformData(*commandBuffer, 0, &time, sizeof(float));
+    frameUniformData.time = time;
+    SDL_PushGPUVertexUniformData(*commandBuffer, 0, &frameUniformData, sizeof(frameUniformData));
+    SDL_PushGPUFragmentUniformData(*commandBuffer, 0, &frameUniformData, sizeof(frameUniformData));
+
+    int viewportWidth, viewportHeight;
+    SDL_GetWindowSize(m_window->getInternal(), &viewportWidth, &viewportHeight);
+    SDL_GPUViewport viewport = {
+        .x = 0,
+        .y = 0,
+        .w = viewportWidth  * 1.0f,
+        .h = viewportHeight * 1.0f,
+        .min_depth = 0.0f,
+        .max_depth = 1.0f
+    };
+    SDL_SetGPUViewport(renderPass, &viewport);
     
     SDL_GPUBufferBinding vertexBufferBindings[1] = {
         {

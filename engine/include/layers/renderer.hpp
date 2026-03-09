@@ -1,5 +1,7 @@
 #pragma once
 
+#include "helpers/mesh_converter.hpp"
+
 #include "../layer.hpp"
 #include "window.hpp"
 #include "gpu_device.hpp"
@@ -24,7 +26,7 @@ protected:
     PhaseState onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, SDL_GPUTexture** swapchainTexture) override;
     
     void loadShader(const std::filesystem::path& shaderPath);
-    void createQuad();
+    void createQuad(std::unique_ptr<codex::LoadedMesh>& mesh);
     void createPipeline();
     
     void loadAssets();

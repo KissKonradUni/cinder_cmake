@@ -81,13 +81,16 @@ struct __attribute__((packed)) MeshChunkHeader {
     uint32_t nextChunkOffset; // Byte offset to the next chunk (0 if this is the last chunk) (from the start of the file)
 };
 
+static constexpr uint32_t SUBMESH_NO_PARENT = 0xFFFFFFFF;
+
 struct __attribute__((packed)) SubmeshDataChunk {
-    P_Transform transform;     // Local transform for this submesh
-    P_AABB submeshBoundingBox; // AABB for this submesh
+    P_Transform transform;       // Local transform for this submesh
+    P_AABB submeshBoundingBox;   // AABB for this submesh
+    uint32_t parentSubmeshID;    // Parent submesh ID (SUBMESH_NO_PARENT if root)
 };
 
 struct __attribute__((packed)) P_Vertex {
-    uint16_t position[3]; // Quantized position (x, y, z)
+    uint16_t position[4]; // Quantized position (x, y, z)
     int16_t  normal[2];   // Octahedral encoded normal (x, y)
     uint16_t uv[2];       // Quantized UV coordinates (u, v)
 };
@@ -123,13 +126,14 @@ struct LoadedSubmesh {
     P_Transform transform;
     P_AABB boundingBox;
 
-    uint32_t vertexOffset; // Offset into the global vertex buffer
+    uint32_t vertexOffset;  // Offset into the global vertex buffer
     uint32_t vertexCount;
 
-    uint32_t indexOffset; // Offset into the global index buffer
+    uint32_t indexOffset;   // Offset into the global index buffer
     uint32_t indexCount;
     
     uint32_t materialIndex; // Index into the mesh's material array
+    uint32_t parentIndex;   // Index into submeshes[] (SUBMESH_NO_PARENT if root)
 };
 
 struct LoadedMesh {
