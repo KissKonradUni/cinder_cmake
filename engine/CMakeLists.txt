@@ -23,6 +23,7 @@ else ()
 endif()
 
 find_package(slang REQUIRED PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH)
+find_package(assimp REQUIRED)
 
 # Add external libraries
-target_link_libraries(cinder_engine PUBLIC imgui SDL3::SDL3 reflectcpp vmlib slang::slang)
+target_link_libraries(cinder_engine PUBLIC imgui SDL3::SDL3 reflectcpp vmlib slang::slang assimp::assimp)

@@ -117,7 +117,7 @@ PhaseState ImGuiLayer::onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, SDL_G
         SDL_GPUColorTargetInfo colorTargetInfo = { 0 };
         colorTargetInfo.texture = *swapchainTexture;
         colorTargetInfo.clear_color = (SDL_FColor){ 0.3f, 0.6f, 0.5f, 1.0f };
-        colorTargetInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
+        colorTargetInfo.load_op = SDL_GPU_LOADOP_LOAD;
         colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
         colorTargetInfo.mip_level = 0;
         colorTargetInfo.layer_or_depth_plane = 0;

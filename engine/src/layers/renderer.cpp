@@ -186,21 +186,75 @@ struct Vertex {
     vec2 uv;
 };
 
-Vertex quadVertices[4] = {
-    { vec3(-1.0f, -1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f) },
-    { vec3( 1.0f, -1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 0.0f) },
-    { vec3( 1.0f,  1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f) },
-    { vec3(-1.0f,  1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 1.0f) }
+#define USE_CUBE
+
+#ifdef USE_CUBE
+#define VERTEX_COUNT 24
+#define INDEX_COUNT  36
+
+Vertex quadVertices[VERTEX_COUNT] = {
+    // Face 1
+    { vec3(-0.238129f, -0.350876f, -0.087637f), vec3(-0.8145f, -0.0149f, -0.5800f), vec2(0.375000f, 0.000000f) },
+    { vec3(-0.405827f,  0.063021f,  0.137232f), vec3(-0.8145f, -0.0149f, -0.5800f), vec2(0.625000f, 0.000000f) },
+    { vec3(-0.169106f,  0.343438f, -0.202370f), vec3(-0.8145f, -0.0149f, -0.5800f), vec2(0.625000f, 0.250000f) },
+    { vec3(-0.001408f, -0.070460f, -0.427239f), vec3(-0.8145f, -0.0149f, -0.5800f), vec2(0.375000f, 0.250000f) },
+    // Face 2
+    { vec3(-0.001408f, -0.070460f, -0.427239f), vec3( 0.4734f,  0.5608f, -0.6792f), vec2(0.375000f, 0.250000f) },
+    { vec3(-0.169106f,  0.343438f, -0.202370f), vec3( 0.4734f,  0.5608f, -0.6792f), vec2(0.625000f, 0.250000f) },
+    { vec3( 0.238129f,  0.350876f,  0.087637f), vec3( 0.4734f,  0.5608f, -0.6792f), vec2(0.625000f, 0.500000f) },
+    { vec3( 0.405827f, -0.063021f, -0.137232f), vec3( 0.4734f,  0.5608f, -0.6792f), vec2(0.375000f, 0.500000f) },
+    // Face 3
+    { vec3( 0.405827f, -0.063021f, -0.137232f), vec3( 0.8145f,  0.0149f,  0.5800f), vec2(0.375000f, 0.500000f) },
+    { vec3( 0.238129f,  0.350876f,  0.087637f), vec3( 0.8145f,  0.0149f,  0.5800f), vec2(0.625000f, 0.500000f) },
+    { vec3( 0.001408f,  0.070460f,  0.427239f), vec3( 0.8145f,  0.0149f,  0.5800f), vec2(0.625000f, 0.750000f) },
+    { vec3( 0.169106f, -0.343438f,  0.202370f), vec3( 0.8145f,  0.0149f,  0.5800f), vec2(0.375000f, 0.750000f) },
+    // Face 4
+    { vec3( 0.169106f, -0.343438f,  0.202370f), vec3(-0.4734f, -0.5608f,  0.6792f), vec2(0.375000f, 0.750000f) },
+    { vec3( 0.001408f,  0.070460f,  0.427239f), vec3(-0.4734f, -0.5608f,  0.6792f), vec2(0.625000f, 0.750000f) },
+    { vec3(-0.405827f,  0.063021f,  0.137232f), vec3(-0.4734f, -0.5608f,  0.6792f), vec2(0.625000f, 1.000000f) },
+    { vec3(-0.238129f, -0.350876f, -0.087637f), vec3(-0.4734f, -0.5608f,  0.6792f), vec2(0.375000f, 1.000000f) },
+    // Face 5
+    { vec3(-0.001408f, -0.070460f, -0.427239f), vec3( 0.3354f, -0.8278f, -0.4497f), vec2(0.125000f, 0.500000f) },
+    { vec3( 0.405827f, -0.063021f, -0.137232f), vec3( 0.3354f, -0.8278f, -0.4497f), vec2(0.375000f, 0.500000f) },
+    { vec3( 0.169106f, -0.343438f,  0.202370f), vec3( 0.3354f, -0.8278f, -0.4497f), vec2(0.375000f, 0.750000f) },
+    { vec3(-0.238129f, -0.350876f, -0.087637f), vec3( 0.3354f, -0.8278f, -0.4497f), vec2(0.125000f, 0.750000f) },
+    // Face 6
+    { vec3( 0.238129f,  0.350876f,  0.087637f), vec3(-0.3354f,  0.8278f,  0.4497f), vec2(0.625000f, 0.500000f) },
+    { vec3(-0.169106f,  0.343438f, -0.202370f), vec3(-0.3354f,  0.8278f,  0.4497f), vec2(0.875000f, 0.500000f) },
+    { vec3(-0.405827f,  0.063021f,  0.137232f), vec3(-0.3354f,  0.8278f,  0.4497f), vec2(0.875000f, 0.750000f) },
+    { vec3( 0.001408f,  0.070460f,  0.427239f), vec3(-0.3354f,  0.8278f,  0.4497f), vec2(0.625000f, 0.750000f) },
 };
 
-uint32_t quadIndices[6] = {
+uint32_t quadIndices[INDEX_COUNT] = {
+     0,  1,  2,   0,  2,  3,
+     4,  5,  6,   4,  6,  7,
+     8,  9, 10,   8, 10, 11,
+    12, 13, 14,  12, 14, 15,
+    16, 17, 18,  16, 18, 19,
+    20, 21, 22,  20, 22, 23,
+};
+
+#else
+#define VERTEX_COUNT 4
+#define INDEX_COUNT  6
+
+Vertex quadVertices[VERTEX_COUNT] = {
+    { vec3(-0.5f, -0.5f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f) },
+    { vec3( 0.5f, -0.5f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 0.0f) },
+    { vec3( 0.5f,  0.5f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f) },
+    { vec3(-0.5f,  0.5f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 1.0f) }
+};
+
+uint32_t quadIndices[INDEX_COUNT] = {
     0, 1, 2,
     2, 3, 0
 };
 
+#endif
+
 SDL_GPUIndexedIndirectDrawCommand drawCommands[1] = {
     {
-        .num_indices = 6,
+        .num_indices = INDEX_COUNT,
         .num_instances = 1,
         .first_index = 0,
         .vertex_offset = 0,
@@ -212,7 +266,7 @@ void RendererLayer::createQuad() {
     // Vertex buffer init
     SDL_GPUBufferCreateInfo createInfo = {
         .usage = SDL_GPU_BUFFERUSAGE_VERTEX,
-        .size = sizeof(Vertex) * 4,
+        .size = sizeof(Vertex) * VERTEX_COUNT,
         .props = 0
     };
     quadVertexBuffer = SDL_CreateGPUBuffer(m_gpuDevice->getInternal(), &createInfo);
@@ -223,7 +277,7 @@ void RendererLayer::createQuad() {
     
     SDL_GPUTransferBufferCreateInfo transferCreateInfo = {
         .usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
-        .size = sizeof(Vertex) * 4,
+        .size = sizeof(Vertex) * VERTEX_COUNT,
         .props = 0
     };
     auto vertexTransferBuffer = SDL_CreateGPUTransferBuffer(
@@ -236,19 +290,19 @@ void RendererLayer::createQuad() {
         .offset = 0,
     };
     auto transferPtr = SDL_MapGPUTransferBuffer(m_gpuDevice->getInternal(), vertexTransferBuffer, false);
-    SDL_memcpy(transferPtr, quadVertices, sizeof(Vertex) * 4);
+    SDL_memcpy(transferPtr, quadVertices, sizeof(Vertex) * VERTEX_COUNT);
     SDL_UnmapGPUTransferBuffer(m_gpuDevice->getInternal(), vertexTransferBuffer);
     
     // Index buffer init
     createInfo.usage = SDL_GPU_BUFFERUSAGE_INDEX;
-    createInfo.size = sizeof(uint32_t) * 6;
+    createInfo.size = sizeof(uint32_t) * INDEX_COUNT;
     quadIndexBuffer = SDL_CreateGPUBuffer(m_gpuDevice->getInternal(), &createInfo);
     if (!quadIndexBuffer) {
         echo::logError(std::format("Failed to create quad index buffer. Error: {}", SDL_GetError()));
         return;
     }
 
-    transferCreateInfo.size = sizeof(uint32_t) * 6;
+    transferCreateInfo.size = sizeof(uint32_t) * INDEX_COUNT;
     auto indexTransferBuffer = SDL_CreateGPUTransferBuffer(
         m_gpuDevice->getInternal(), 
         &transferCreateInfo
@@ -259,7 +313,7 @@ void RendererLayer::createQuad() {
         .offset = 0,
     };
     transferPtr = SDL_MapGPUTransferBuffer(m_gpuDevice->getInternal(), indexTransferBuffer, false);
-    SDL_memcpy(transferPtr, quadIndices, sizeof(uint32_t) * 6);
+    SDL_memcpy(transferPtr, quadIndices, sizeof(uint32_t) * INDEX_COUNT);
     SDL_UnmapGPUTransferBuffer(m_gpuDevice->getInternal(), indexTransferBuffer);
 
     // Command buffer init
@@ -292,7 +346,7 @@ void RendererLayer::createQuad() {
     SDL_GPUBufferRegion copyRegion = {
         .buffer = quadVertexBuffer,
         .offset = 0,
-        .size = sizeof(Vertex) * 4
+        .size = sizeof(Vertex) * VERTEX_COUNT
     };
     SDL_UploadToGPUBuffer(
         copyPass,
@@ -302,7 +356,7 @@ void RendererLayer::createQuad() {
     );
 
     copyRegion.buffer = quadIndexBuffer;
-    copyRegion.size = sizeof(uint32_t) * 6;
+    copyRegion.size = sizeof(uint32_t) * INDEX_COUNT;
     SDL_UploadToGPUBuffer(
         copyPass,
         &indexTransferLocation,
@@ -470,7 +524,7 @@ PhaseState RendererLayer::onRenderFrame(SDL_GPUCommandBuffer** commandBuffer, SD
         .texture = *swapchainTexture,
         .mip_level = 0,
         .layer_or_depth_plane = 0,
-        .clear_color = (SDL_FColor){ 0.3f, 0.6f, 0.5f, 1.0f },
+        .clear_color = (SDL_FColor){ 0.5f, 0.5f, 0.5f, 1.0f },
         .load_op = SDL_GPU_LOADOP_CLEAR,
         .store_op = SDL_GPU_STOREOP_STORE,
         .cycle = false
